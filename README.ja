@@ -1,0 +1,130 @@
+このプログラムについて
+    Linuxで動くコンソールファイラ(CUIファイラ)です。
+    ファイルのコピーや移動、削除、改名、検索、解凍などが行えます。
+    うりはシェルスクリプト言語xyzshを組み込んでいて簡単なプログラム(スクリプトと呼ぶ)を実行できることです。
+
+使用上の注意
+    このプログラムの実行は自己責任で行ってください。ファイル操作やプログラムの実行という重要な操作を行うプログラムであるという認識は作者にもあり、しっかりとデバッグを行っていますが、もし見過ごしている不具合があって、実行結果によって使用者が被害を被っても作者は責任は持てません。このことが承知できる方だけ使用してください。
+
+コンパイルの仕方
+    コンパイルするためにはまずmfiler4が使っている（依存している)ライブラリをインストールする必要があります。
+
+    mfiler4が依存しているプログラム、ライブラリは
+
+    gcc (コンパイラ)。
+    Cライブラリ。
+    ncurses(w) (端末制御ライブラリ。画面に文字列を任意の場所に表示するためのライブラリ。このライブラリがないとmfiler4やvimのようなソフトは作れません)
+    oniguruma (正規表現ライブラリ。正規表現という文字列を楽に操作するため文字列処理用のライブラリです)
+    libm (数学ライブラリ。三角関数や指数計算などを行えるライブラリ)
+    xyzsh (シェルスクリプト言語ライブラリ。mfiler4から使えるアプリケーション組み込み用のシェルスクリプト言語です)
+    C/migemo (日本語が変換無しのローマ字入力で検索できるライブラリ。このライブラリは無くてもコンパイルできます)
+
+    の７つです。
+
+    gccはFedora, Debian, Ubuntuのいずれもgccという名前のパッケージになってます。インストールしてください。Ubuntuはgccはデフォルトで入ってます。
+
+    Cライブラリは大抵のディストリビューションではデフォルトで入っています。Ubuntuでは2010年2月現在ではlibc6-devという名前になっています。インストールしてください。
+
+    ncursese(w)は大抵のディストリビューションで最初からインストールされていますが、インストールされているのはユーザー用のパッケージである場合が多いです。コンパイルするためには開発用のパッケージをインストールする必要があります。Fedoraでは開発用のパッケージ名は-develと名づけられていることが多いです。ncurses(w)の場合はncurses(w)-develとなっています。Debian, Ubuntuでは-devというのが開発用のパッケージで、ncurses(w)の場合はlibncurses(w)-devとなっています。UTF8文字を端末上に表示させるにはncursesではなくncurseswが必要となります。
+
+    onigurumaも大抵のディストリビューションでパッケージになっていてFedoraではoniguruma-devel, Debian, Ubuntuではlibonig-devをインストールすれば良いです。
+
+    libmは開発用のパッケージも大抵のディストリビューションでデフォルトでインストールされているはずです。
+
+    xyzshは僕が作ったものでパッケージになってないのでコンパイルする必要があります。以下のページで配布してあるのでコンパイルしてインストールしてください。
+
+    シェルスクリプト言語xyzsh http://sourceforge.jp/projects/xyzsh/
+
+    C/Migemoはパッケージになっているディストリビューションやなっていないディストリビューションがまちまちです。Fedoraではパッケージ名がcmigemo-develとなっています。Debian, Ubuntuではパッケージになっていないようなので以下のページでインストールしてください。
+
+    Kaoriya.net http://www.kaoriya.net/#CMIGEMO
+
+    ダウンロードするファイルはソースコード 1.3開発版 (MITラインセンス)がいいでしょう。コンパイル方法はダウンロードしたファイルの中のドキュメントに書いてあります。
+
+注) 2010/03 KaoriyaのC/MigemoはUTF8の辞書ライブラリがありませんでした。/usr/share/cmigemo/{eucjp,sjis}か/usr/local/share/migemo/{eucjp,sjis}に置いてある辞書ファイル全てをnkf -w 辞書ファイル名 > /usr/local/share/migemo/utf-8/辞書ファイル名としてUTF-8の辞書を作ってください。
+
+    あと以下のプログラムにも依存しています。
+
+    多言語対応ページャ lv
+    高機能エディッタ vim
+
+    lvは大抵のディストリビューションでパッケージになっています。日本語でヘルプを読むために必要です。lessはディストリビューションによっては日本語が化ける場合があるようなのでページャはlvがおすすめです。
+    vimは大抵のディストリビューションで入ってます。Linuxで使用するエディッタはvimがおすすめです。
+
+    さて依存ライブラリ、依存プログラムが全てインストールできたら（C/Migemoの使用は任意です)
+
+    mfiler4-version.tgzをダウンロードして作業用のディレクトリで解凍してください。
+
+    tar xvfz mfiler4-version.tgz
+
+    解凍したらできたディレクトリに移動して
+
+    ./configure 
+    make
+    sudo make install
+
+    もしくは
+    ./configure
+    make 
+    su
+    make install
+
+    (make installの実行には管理者権限が必要です)
+
+    実行すれば/usr/local/binにmfiler4コマンドが, /usr/local/etc/に設定ファイルがインストールされます。
+
+    configureでは以下のオプションが使用できます。
+
+    --with-debug デバッグ用の実行ファイルを作成する。メモリリークの検出やgdbでデバッグできる-gオプションをgcc(コンパイラ)に付与します。
+    --prefix インストールするディレクトリを指定します。たとえば--prefix=$HOMEとすると$HOME/binに実行ファイルが$HOME/etcに設定ファイルが設定されます。デフォルトでは/usr/localです。
+    --with-migemo C/Migemoを有効にします。C/Migemoはインストールしただけではmfiler4で使われません。このオプションを指定して有効にしてください。
+    --with-optimize コードの最適化を有効にします。
+    --with-migemo-dir C/Migemoが標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
+    --with-onig-dir 鬼車が標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
+    --with-xyzsh-dir xyzshが標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
+    --with-system-migemo-dir C/Migemoの辞書ファイルの位置を指定します。
+
+使用するファイル
+    /usr/local/bin/mfiler4 プログラム本体
+    /usr/local/bin/mattr サブプログラム本体
+    /usr/local/etc/mfiler4.xyzsh mfiler4の設定ファイルのソース
+    /usr/local/share/doc/mfiler4/USAGE.ja.txt ドキュメント
+    /usr/local/share/doc/mfiler4/USAGE.txt
+    /usr/local/share/doc/mfiler4/README.ja
+    /usr/local/share/doc/mfiler4/README
+    /usr/local/share/doc/mfiler4/CHANGELOG
+    /usr/local/share/man/man1/mfiler4.1 manファイル
+    ~/.mfiler4/ mfiler4の状態を保存するディレクトリ。パーミッションは700としてください。
+    ~/.mfiler4/jump jによるジャンプメニューの設定を保存。詳しくはmfiler4.xyzshを読んでください。
+    ~/.mfiler4/stat mfiler4が使っている環境変数の保存先。ソートの並び方やカラーや、ファイル描写の設定などが保存されます。
+    ~/.mfiler4/mfiler4.xyzsh ユーザーが使用する設定ファイルはここに配置してください。/usr/local/etc/mfiler4.xyzshのあとに読まれます。
+    ~/.mfiler4/trashbox/ mfiler4 のゴミ箱ディレクトリ。dで消されたファイルはここに置かれます。
+    ~/.xyzsh/xyzsh.xyzsh --> xyzshの設定ファイル。/usr/local/exc/xyzsh.xyzshの後に読み込まれます。
+    ~/.xyzsh/history --> コマンドラインのヒストリファイル
+    ~/.xyzsh/macro --> コマンドラインマクロのファイル。コマンドラインでCTRL-Xを押すとマクロが実行されます。
+    ~/.xyzsh/jump --> jumpコマンドがこのファイルを使います。
+    ~/.xyzsh/menu --> menuコマンドがこのファイルを使います。
+    ~/.xyzsh/program --> sys::を省略する外部プログラムのリスト
+
+使い方
+    実行中に?を押せば簡単な使い方が見れます。
+
+使用するエンコード
+    xyzshが扱うデータやスクリプトファイルはUTF8, EUCJP, SJISやLF,CR,LFCRのラインフィールドに対応しています。
+    mfiler4が使用端末や入力文字はUTF8決めうちです。UTF8端末で実行してください。ファイルシステムのエンコードはUTF8-MAC, UTF8に対応しています。
+
+OSXでのコンパイルや実行について
+    nkfでC/MigemoでUtf8-MACの辞書を作る
+
+    sudo bash
+    cd /usr/local/share/migemo/cp932
+    for i in *; do nkf -w $i > ../utf-8/$i; done
+
+    ./configure --with-migemo --with-system-migemodir=/usr/local/share/migemo
+    make && sudo make install
+
+    で作れるはずです。
+
+著作権
+    ab25cqにあります。ライセンスはMITライセンスとします。再配布するときは一報してもらえると助かります。
+

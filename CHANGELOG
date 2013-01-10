@@ -1,0 +1,174 @@
+
+2013 1月10日 version 1.0.9
+
+    1. xyzsh-1.3.0に対応。xyzshのリファクタリングによって使用メモリが減っています。
+
+xyzshは1.3.0以上が必要です。
+
+2013 1月4日 version 1.0.8
+
+    1. jumpメニューが落ちる問題と終了時に無い内容が保存されない問題を修正。
+
+2013 1月4日 version 1.0.7
+
+	1. 主にリファクタリング。xyzsh 1.2.8に対応。xyzshのバージョン1.2.8以上が必要です。
+
+2013 4th January version 1.0.7
+
+	1. Required xyzsh 1.2.8
+
+2012 12月22日 version 1.0.6
+
+	1. xyzsh 1.2.7に対応。xyzshのバージョン1.2.7以上が必要です。
+
+2012 22th December version 1.0.6
+
+	1. Required xyzsh 1.2.7
+
+2012 19th December version 1.0.5c
+
+    1. Fixed a migemo file incremental search bug.
+
+2012 12月19日 1.0.5c
+
+	1. migemoのインクリメンタルサーチがおかしかったバグを修正。(1.0.5aよりおかしかった。)
+
+2012 14th December version 1.0.5b
+
+	1. Got good way to refresh screen on cygwin.
+
+2012 12月14日 1.0.5b
+
+	1. cygwinで画面のちらつきを抑えました。
+
+2012 14th December version 1.0.5a
+
+	1. Maybe got good way to refresh screen on cygwin.
+
+2012 12月14日 1.0.5a
+
+	1. ファイラー画面でカーソルを消すように変更。cygwinで画面のちらつきが押さえられたかもしれません。画面のちらつきがひどい時もあり、原因不明。
+
+2012 14th December version 1.0.5
+
+    1. mfiler4 start to use ncurses or ncursesw.
+
+    2. delete keymap inner command
+    
+    3. delete key_meta_left, key_meta_right, key_meta_up, key_meta_down,
+	key_ctrl_left, key_ctrl_right, key_ctrl_up, key_ctrl_down, key_ctrl_delete,
+	key_ctrl_space environment variable. Added key_delete2 environment
+	variable.
+
+    4. Binded meta + l key to backward directory. Binded meta + r key to forward
+	director.
+
+    5. Binded meta + a to mark all files without directories. Binded meta + e
+	to mark all files.
+
+		6. Added -O3 option to gcc.
+
+	require xyzsh-1.2.6 later
+
+2012 12月14日 version 1.0.5
+
+    1. cursesを独自ライブラリからcurses(w)に変更
+
+    2. keymap内部コマンドを削除
+    
+    3. 環境変数のkey_meta_left, key_meta_right, key_meta_up, key_meta_down, key_ctrl_left, key_ctrl_right, key_ctrl_up, key_ctrl_down, key_ctrl_delete, key_ctrl_spaceを削除。環境変数のkey_delete2を追加。
+
+    4. ディレクトリの戻るをmeta + l, ディレクトリの進をmeta + r に変更 ( key_meta_left, key_meta_rightが使えなくなったため)
+
+    5. 全マークをするHOMEキーと同じ機能をmeta + aに、ENDキーと同じ機能をmeta + eにバインド。(HOME, ENDキーが使えない端末が多いため)
+
+		6. 最適化レベルを3にしてみました。問題があれば、また2に戻します。
+
+		xyzshの1.2.6以上が必要になりました。
+
+2012 24th November version 1.0.4
+
+	1. Fixed help.
+
+2012 11月12日 version 1.0.4
+
+	1. keycommandの-externalを付けた場合のキーバインドを実行した後にファイラー画面のファイルを再読み込みするようにしました。マークもクリアします。:によるbashを実行した後やeのvimでファイルを作った場合などにも対応します。
+
+	2. gMigemoとgMigemoCacheがxyzshの同名の変数とコンフリクトを起こしていたバグを修正。static変数となっています。Fedoraでの実行時エラーを修正。
+
+    xyzsh 1.2.0が必要。
+
+2012 12th November version 1.0.4
+
+    1. Made to be refreshed filer after running key command with -external.
+    
+    2. gMigemo and gMigemoCache variable have been changed to static variable.
+    
+    require xyzsh 1.2.0 later
+
+2012 11月8日 バージョン 1.0.3b
+
+    1. Fedoraでコンパイルが通るようにしました。
+
+2012 12th Novermber version 1.0.3b
+
+    1. can be compiled on Fedora
+
+2012 11月8日 バージョン 1.0.3a
+
+    1. keycommandの-externalを付けた場合のキーバインドを実行した後にファイラー画面のファイルを再読み込みするようにしました。マークもクリアします。:によるbashを実行した後やeのvimでファイルを作った場合などにも対応します。
+
+2012 8th Novermber version 1.0.3
+
+    1. Made to be refreshed filer after running key command with -external.
+
+2012 10月31日 バージョン 1.0.3
+
+	1. ジャンプメニューの仕様が変わりました。
+	今まで保存したジャンプメニューを使いたい場合は
+	mfiler4を終了させて、bash上で
+
+	cp ~/.mfiler4/jmenu ~/.mfiler4/jump
+	
+	とコピーしてから
+	
+	vim ~/.mfiler4/jump
+
+	として、~/.mfiler4/jumpを1行1ディレクトリのリストにしてください。
+
+	そうすると保存された内容がそのまま使われます。
+
+	今までは１行目にタイトル、２行目にキー、３行目にディレクトリと保存されていました。
+
+	2. 空白を含むファイル名の扱いがよくなりました。
+	今までだとENTERを押したときなどわざわざクォートしないといけませんでした。
+
+	xyzsh 1.1.6以上が必要です。
+
+2012 31th Octorber version 1.0.3
+
+	1. Changed a way of jump menu. You should copy ~/.mfiler4/jmenu to
+	~/.mfiler4/jump and edit ~/.mfiler4/jump
+
+	2. Changed mfiler4.xyzsh for file name with using space.
+
+	required xyzsh 1.1.6 later
+
+2012 30th Octorber version 1.0.2
+
+	Made runnable on cygwin
+
+    require xyzsh-1.1.6 later
+
+2012 26th Octorber version 1.0.1
+
+    Check mfiler4 with migemo and fixed bug
+
+    require xyzsh-1.1.4 later
+
+2012 26th Octorber version 1.0.0
+
+	First version release
+
+    require xyzsh-1.1.1 later
+

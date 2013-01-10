@@ -1,0 +1,63 @@
+mfiler4
+
+This program is a 2pain file manager with a embedded shell scripting system "xyzsh" under linux, OSX, cygwin, and FreeBSD.
+
+Attension
+    Use this on your responsibility. I can't take the responsibility on your works with this program. 
+
+How do I compile this?
+    Before compiling, you need to resolve the dependencies which mfiler4 used.
+
+    mfiler4 depends on gcc, GNU make, libc, libm, libncurses(w), libreadline, libxyzsh which is a embedded shell scripting system, oniguruma which is a regex library. Optionary if you are japanese, you can use C/Migemo for ro-maji completion.
+    After installed thise, type below commands on your shell.
+
+    ./configure --with-optimize
+    make
+    sudo make install
+
+    or
+
+    ./configure --with-optimize
+    make 
+    su
+    make install
+
+    As default, the make program will install xyzsh at /usr/locall.
+
+    the configure options are 
+
+    --prefix --> installed directory.
+    --with-migemo --> enable C/Migemo
+    --with-optimize --> enable optimize code. 
+    --with-onig-dir --> oniguruma installed directory which is prefix of oniguruma.
+    --with-migemo-dir --> C/Migemo installed directory
+    --with-system-migemo-dir --> C/Migemo dictonary directory
+    --with-xyzsh-dir xyzsh installed directory which is prefix of xyzsh.
+    --with-debug --> use debug mode. you can detect memory leaks and debug with gdb.
+    --with-gprof-debug --> use gprof debug mode. you can profile mfiler4 with gprof
+
+used files by mfiler4
+    /usr/local/bin/mfiler4 the program
+    /usr/local/bin/mattr sub program
+    /usr/local/etc/mfiler4.xyzsh mfiler4 setting source file
+    /usr/local/share/doc/mfiler4/USAGE.ja.txt Documents
+    /usr/local/share/doc/mfiler4/USAGE.txt
+    /usr/local/share/doc/mfiler4/README.ja
+    /usr/local/share/doc/mfiler4/README
+    /usr/local/share/doc/mfiler4/CHANGELOG
+    /usr/local/share/man/man1/mfiler4.1 man file
+    ~/.mfiler4/ mfiler4 config directory
+    ~/.mfiler4/jump mfiler4 jump menu file
+    ~/.mfiler4/stat mfiler4 stat file
+    ~/.mfiler4/trashbox/ mfiler4 trash box directory
+    ~/.mfiler4/mfiler4.xyzsh --> a source user setting file. mfiler4 read this asfter /usr/local/etc/mfiler4.xyzsh
+    ~/.xyzsh/xyzsh.xyzsh --> a source user setting file. xyzsh read this after /usr/local/etc/xyzsh.xyzsh
+    ~/.xyzsh/history --> a command line history file
+    ~/.xyzsh/macro --> macro which is runned by typing C-x on command line uses this file
+    ~/.xyzsh/jump --> jump inner command uses this file
+    ~/.xyzsh/menu --> menu inner command uses this file
+    ~/.xyzsh/program --> program lists for omiting sys:: prefix for external program
+
+USAGE
+    when running mfiler4, hit ?
+

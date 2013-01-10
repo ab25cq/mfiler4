@@ -1,0 +1,93 @@
+
+##########################################################################
+# 環境変数
+###########################################################################
+CC=@CC@
+INSTALL=@INSTALL@
+CFLAGS=@CFLAGS@ -Werror
+LIBS=@LIBS@
+SYSTEM_MIGEMODIR=@SYSTEM_MIGEMODIR@
+OBJ=src/filer.o src/file.o src/isearch.o src/menu.o src/gui.o src/commands.o src/dir.o
+DESTDIR=
+
+###########################################################################
+# インストールするディレクトリ位置
+###########################################################################
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+datadir=@datadir@
+mandir=@mandir@
+libdir=@libdir@
+sharedstatedir=@sharedstatedir@
+sysconfdir=@sysconfdir@/mfiler4
+includedir=@includedir@/mfiler4
+datarootdir=@datarootdir@
+docdir=@datadir@/doc/mfiler4
+
+###########################################################################
+# make
+###########################################################################
+all: mfiler4 mattr
+	rm -f install
+
+clean:
+	rm -f mfiler4 src/*.o mattr mattr.exe mfiler4.exe mfiler4.exe.stackdump config.log config.status
+
+distclean:
+	rm -rf mfiler4 src/*.o src/config.h Makefile mattr mattr.exe mfiler4.exe config.log config.status mfiler4.dSYM/
+
+mfiler4: src/config.h src/main.c $(LIBMIGEMO) $(LIBONIG) $(OBJ)
+	$(CC) -o mfiler4 src/main.c -DDOCDIR=\"$(docdir)\" $(OBJ) $(LIBS) $(CFLAGS)
+
+mattr: src/mattr.c
+	$(CC) -o mattr src/mattr.c -lcurses
+
+src/isearch.o: src/isearch.c
+	$(CC) -o src/isearch.o -c src/isearch.c  $(CFLAGS) -DSYSTEM_MIGEMODIR=\"$(SYSTEM_MIGEMODIR)\"
+
+permission:
+	chmod 644 *
+	chmod 755 .git man src configure
+	chmod 644 src/*.c src/*.h
+
+##########################################################################
+# インストール
+##########################################################################
+install:
+	if [ -z "$(DESTDIR)" ]; then make normal-install; else make dest-install; fi
+
+normal-install:
+	mkdir -p "$(bindir)";
+	mkdir -p "$(sysconfdir)";
+	mkdir -p "$(docdir)";
+	mkdir -p "$(mandir)/man1"
+	install -m 644 USAGE.ja.txt $(docdir);
+	install -m 644 USAGE.txt $(docdir);
+	install -m 644 README.ja $(docdir);
+	install -m 644 README $(docdir);
+	install -m 644 CHANGELOG $(docdir);
+	rm -f $(bindir)/mfiler4;
+	install -s -m 755 mfiler4 $(bindir);
+	install -m 644 mfiler4.xyzsh $(sysconfdir);
+	rm -f $(bindir)/mattr;
+	install -s -m 755 mattr $(bindir);
+	install -m 644 man/man1/mfiler4.1 "$(mandir)/man1"
+
+dest-install:
+	mkdir -p "$(DESTDIR)/$(bindir)";
+	mkdir -p "$(DESTDIR)/$(sysconfdir)";
+	mkdir -p "$(DESTDIR)/$(docdir)"
+	mkdir -p "$(DESTDIR)/$(mandir)/man1"
+	install -m 644 USAGE.ja $(DESTDIR)/$(docdir)
+	install -m 644 USAGE $(DESTDIR)/$(docdir)
+	install -m 644 README.ja $(DESTDIR)/$(docdir);
+	install -m 644 README $(DESTDIR)/$(docdir);
+	install -m 644 CHANGELOG $(DESTDIR)/$(docdir);
+	rm -f $(DESTDIR)/$(bindir)/mfiler4
+	install -s -m 755 mfiler4 $(DESTDIR)/$(bindir)
+	install -m 644 mfiler4.xyzsh $(DESTDIR)/$(sysconfdir)
+	rm -f $(DESTDIR)/$(bindir)/mattr
+	install -s -m 755 mattr $(DESTDIR)/$(bindir)
+	install -m 644 man/man1/mfiler4.1 "$(DESTDIR)/$(mandir)/man1"
+

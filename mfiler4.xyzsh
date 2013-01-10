@@ -1,0 +1,1613 @@
+#cmdline -c
+
+if(export MF4HOME |chomp| -d) (
+    chmod 700 $MF4HOME
+) else (
+    if(export MF4HOME |chomp| -e) (
+        raise "$MF4HOME is not directory"
+    )
+
+    mkdir -p $MF4HOME
+    chmod 700 $MF4HOME
+)
+
+print $MF4HOME/trashbox/ | export TRASHBOX_DIR # when pressing d, you can move files to this directory
+
+mfiler4::prompt (
+    print "mfiler4 $VERSION with xyzsh $XYZSH_VERSION (c)ab25cq 2004-2013 hit <?> for help"
+)
+
+### file name ecode settings ###
+if(export LC_ALL LANG | (| index -ignore-case -quiet utf8 || | index -ignore-case -quiet utf-8)) (
+    kanjicode -utf8
+    if(uname | chomp | = Darwin) (
+        kanjicode_file_name -utf8-mac
+    ) else (
+        kanjicode_file_name -utf8
+    )
+) else (
+    kanjicode -byte
+    kanjicode_file_name -byte
+)
+
+### mfiler4.xyzsh common user command ###
+def toggle (
+    | if(| = 0) (
+        print 1
+    ) else (
+        print 0
+    )
+)
+
+### list mode ####################
+print 0 | (| var VIEW_LIST_MODE; | var VIEW_LIST_MODE_PERMISSION; | var VIEW_LIST_MODE_NLINK; | var VIEW_LIST_MODE_OWNER; | var VIEW_LIST_MODE_GROUP; | var VIEW_LIST_MODE_SIZE; | var VIEW_LIST_MODE_MTIME; | var VIEW_LIST_MODE_OPTION )
+
+def toggle_list_mode (
+    if (var VIEW_LIST_MODE |chomp| = 0) (
+        print 1 | var VIEW_LIST_MODE
+
+        export VIEW_PERMISSION | var VIEW_LIST_MODE_PERMISSION
+        export VIEW_NLINK | var VIEW_LIST_MODE_NLINK
+        export VIEW_OWNER | var VIEW_LIST_MODE_OWNER
+        export VIEW_GROUP | var VIEW_LIST_MODE_GROUP
+        export VIEW_SIZE | var VIEW_LIST_MODE_SIZE
+        export VIEW_MTIME | var VIEW_LIST_MODE_MTIME
+        export VIEW_OPTIOIN | var VIEW_LIST_MODE_OPTION
+
+        print 1 | (| export VIEW_PERMISSION; | export VIEW_NLINK; | export VIEW_OWNER; | export VIEW_GROUP; | export VIEW_SIZE; | export VIEW_MTIME)
+        print 1pain | export VIEW_OPTION
+    ) else (
+        print 0 | var VIEW_LIST_MODE
+
+        var VIEW_LIST_MODE_PERMISSION | export VIEW_PERMISSION
+        var VIEW_LIST_MODE_NLINK | export VIEW_NLINK
+        var VIEW_LIST_MODE_OWNER | export VIEW_OWNER
+        var VIEW_LIST_MODE_GROUP | export VIEW_GROUP
+        var VIEW_LIST_MODE_SIZE | export VIEW_SIZE
+        var VIEW_LIST_MODE_MTIME | export VIEW_MTIME
+        var VIEW_LIST_MODE_OPTION | export VIEW_OPTION
+    )
+)
+
+### name only mode ###########
+print 0 | (| var VIEW_NAMEONLY_MODE; | var VIEW_NAMEONLY_MODE_PERMISSION; |  var VIEW_NAMEONLY_MODE_NLINK; | var VIEW_NAMEONLY_MODE_OWNER; |  var VIEW_NAMEONLY_MODE_GROUP; |  var VIEW_NAMEONLY_MODE_SIZE; | var VIEW_NAMEONLY_MODE_MTIME; | var VIEW_NAMEONLY_MODE_OPTION)
+
+def toggle_nameonly_mode (
+    if(var VIEW_NAMEONLY_MODE |chomp| = 0) (
+        print 1 | var VIEW_NAMEONLY_MODE
+
+        export VIEW_PERMISSION | var VIEW_NAMEONLY_MODE_PERMISSION
+        export VIEW_NLINK | var VIEW_NAMEONLY_MODE_NLINK
+        export VIEW_OWNER | var VIEW_NAMEONLY_MODE_OWNER
+        export VIEW_GROUP | var VIEW_NAMEONLY_MODE_GROUP
+        export VIEW_SIZE | var VIEW_NAMEONLY_MODE_SIZE
+        export VIEW_MTIME | var VIEW_NAMEONLY_MODE_MTIME
+        export VIEW_OPTION | var VIEW_NAMEONLY_MODE_OPTION
+
+        print 0 | (| export VIEW_PERMISSION; | export VIEW_NLINK; | export VIEW_OWNER; | export VIEW_GROUP; | export VIEW_SIZE; | export VIEW_MTIME)
+        print 1pain | export VIEW_OPTION
+    ) else (
+        print 0 | var VIEW_NAMEONLY_MODE
+
+        var VIEW_NAMEONLY_MODE_PERMISSION | export VIEW_PERMISSION
+        var VIEW_NAMEONLY_MODE_NLINK | export VIEW_NLINK
+        var VIEW_NAMEONLY_MODE_OWNER | export VIEW_OWNER
+        var VIEW_NAMEONLY_MODE_GROUP | export VIEW_GROUP
+        var VIEW_NAMEONLY_MODE_SIZE | export VIEW_SIZE
+        var VIEW_NAMEONLY_MODE_MTIME | export VIEW_MTIME
+        var VIEW_NAMEONLY_MODE_OPTION | export VIEW_OPTION
+    )
+)
+
+# color ####################
+print 0 | var COLOR
+export ma_bold | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK)
+
+def toggle_color (
+    if(COLOR |chomp| = 0) (
+        if (export HAS_COLOR | = 1\n) (
+            print 1 | var COLOR
+
+            export ma_cyan | export COLOR_DIR
+            export ma_green | export COLOR_EXE
+            export ma_magenta | export COLOR_LINK
+            export ma_yellow | export COLOR_MARK
+        )
+    ) else (
+        print 0 | var COLOR
+
+        export ma_bold | (| export COLOR_DIR; | export COLOR_EXE; | export COLOR_MARK; | export COLOR_LINK)
+    )
+)
+
+defmenu view
+addmenu view '2dir (a)ll' $key_a (
+    print 2pain | export VIEW_OPTION
+)
+
+addmenu view '1dir(1)' $key_1 (
+    print 1pain | export VIEW_OPTION 
+)
+
+addmenu view '1dir(2)' $key_2 (
+    print 1pain2 | export VIEW_OPTION
+)
+
+addmenu view '1dir(3)' $key_3 (
+    print 1pain3 | export VIEW_OPTION
+)
+addmenu view '1dir(5)' $key_5 (
+    print 1pain5 | export VIEW_OPTION
+)
+
+print 0 | ( | export VIEW_SIZE; | export VIEW_MTIME; | export VIEW_OWNER; | export VIEW_GROUP; | export VIEW_NLINK; | export VIEW_PERMISSION; | export VIEW_DIVIDE_EXTENSION; | export VIEW_FOCUSBACK; | export VIEW_PAGE; | export VIEW_PAGE; | export VIEW_ADD_STAR_EXE; | export COLOR_EXE)
+
+print Normal | export VIEW_FILE_SIZE
+
+addmenu view 'toggle (s)ize' $key_s (
+    export VIEW_SIZE |chomp| toggle | export VIEW_SIZE
+)
+
+addmenu view 'toggle m(t)ime' $key_t (
+    export VIEW_MTIME |chomp| toggle | export VIEW_MTIME
+)
+
+addmenu view 'toggle (u)ser' $key_u (
+    export VIEW_OWNER |chomp| toggle | export VIEW_OWNER
+)
+
+addmenu view 'toggle (g)roup' $key_g (
+    export VIEW_GROUP |chomp| toggle | export VIEW_GROUP
+)
+
+addmenu view 'toggle nl(i)nk' $key_i (
+    export VIEW_NLINK |chomp| toggle | export VIEW_NLINK
+)
+
+addmenu view 'toggle (p)ermission' $key_p (
+    export VIEW_PERMISSION |chomp| toggle | export VIEW_PERMISSION
+)
+
+addmenu view 'toggle fname (d)vide extension' $key_d (
+    export VIEW_DIVIDE_EXTENSION|chomp|toggle | export VIEW_DIVIDE_EXTENSION
+)
+
+addmenu view 'toggle fname (f)ocus back' $key_f (
+    export VIEW_FOCUSBACK |chomp| toggle | export VIEW_FOCUSBACK
+)
+
+addmenu view 'toggle (l)ist mode' $key_l (
+    toggle_list_mode
+)
+
+addmenu view 'toggle (n)ameonly mode' $key_n (
+    toggle_nameonly_mode
+)
+
+addmenu view 'toggle (c)olor' $key_c (
+    toggle_color
+)
+
+addmenu view 'toggle (P)age view way' $key_P (
+    export VIEW_PAGE |chomp| toggle | export VIEW_PAGE
+)
+
+addmenu view 'fil(e) size view way Normal' $key_e (
+    print Normal | export VIEW_FILE_SIZE
+)
+
+addmenu view 'fil(E) size view way Human' $key_E (
+    print Human | export VIEW_FILE_SIZE
+)
+
+addmenu view 'file (S)ize view way Plane' $key_S (
+    print Plane | export VIEW_FILE_SIZE
+)
+
+addmenu view 'toggle adding star to e(X)e file' $key_X (
+    if(export VIEW_ADD_STAR_EXE| chomp | = 0) ( 
+        print 1 | export VIEW_ADD_STAR_EXE
+        export ma_red | export COLOR_EXE; 
+    ) else ( 
+        print 0 | export VIEW_ADD_STAR_EXE
+        export ma_white | export COLOR_EXE 
+    )
+)
+
+print name | export SORT_KIND
+print 1 | export SORT_DIR_UP
+reread -d all
+
+print 0 | export SORT_MARK_UP
+
+defmenu sort_and_mask 
+addmenu sort_and_mask '(n)ame' $key_n (
+    print name | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(N)ame reverse' $key_N (
+    print name_rev | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(e)xtension' $key_e (
+    print ext | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(E)xtension reverse' $key_E (
+    print ext_rev | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(s)ize' $key_s (
+    print size | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(S)ize reverse' $key_S (
+    print size_rev | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(t)ime' $key_t (
+    print time | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(T)ime reverse' $key_T (
+    print time_rev | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(u)ser' $key_u (
+    print user | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(U)ser reverse' $key_U (
+    print user_rev | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(g)roup' $key_g (
+    print group | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(G)roup reverse' $key_G (
+    print group_rev | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(p)ermission' $key_p (
+    print perm | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(P)ermission reverse' $key_P (
+    print perm_rev| export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask '(r)andom' $key_r (
+    print random | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask 'none (0)' $key_0 (
+    print none | export SORT_KIND
+    reread -d all
+)
+
+addmenu sort_and_mask 'toggle (d)ir up' $key_d (
+    export SORT_DIR_UP |chomp | toggle | export SORT_DIR_UP
+    reread -d all
+)
+
+addmenu sort_and_mask 'toggle (m)ark up' $key_m (
+    export SORT_MARK_UP | chomp | toggle | export SORT_MARK_UP
+    reread -d all
+)
+
+addmenu sort_and_mask '(M)ask' $key_M (
+    cmdline "mfiler4::mask -r ''" -2
+)
+
+defmenu attribute 
+
+addmenu attribute 'ch(m)od (permission)' $key_m (
+    cmdline 'chmod  $$(mfiler4::markfiles)' 6
+)
+
+addmenu attribute 'ch(o)wn (owner)' $key_o (
+    cmdline 'chown  $$(mfiler4::markfiles)' 6
+)
+
+addmenu attribute 'ch(g)rp (group)' $key_g (
+    cmdline 'chgrp  $$(mfiler4::markfiles)' 6
+)
+
+addmenu attribute 'ch(M)od -R (permission recursive)' $key_M (
+    cmdline 'chmod -R  $$(mfiler4::markfiles)' 9
+)
+
+addmenu attribute 'ch(O)wn -R (owner recursive)' $key_O (
+    cmdline 'chown -R  $$(mfiler4::markfiles)' 9
+)
+
+addmenu attribute 'ch(G)rp -R (group recursive)' $key_G (
+    cmdline 'chgrp -R  $$(mfiler4::markfiles)' 9
+)
+
+addmenu -external attribute 'm(a)ttr (permission and date)' $key_a (
+    sys::mattr $$(markfiles)
+)
+
+keycommand $key_up ( cursor_move -1 )
+keycommand $key_down ( cursor_move +1 )
+keycommand $key_ctrl_p ( cursor_move -1 )
+keycommand $key_ctrl_n ( cursor_move +1 )
+keycommand $key_h ( cmdline )
+keycommand $key_H ( cmdline -c )
+
+keycommand $key_enter (
+    marking | if(| = 1\n) (
+        cmdline ' $$(mfiler4::markfiles)' 0
+    ) else (
+        cursor | chomp | if( | -d) (
+            mcd $(cursor|chomp) 
+        ) else (
+            cmdline " '$(cursor|chomp)'" 0
+        )
+    )
+)
+
+def scroll_left (
+    if(row |chomp | != 0) (
+        cursor_move -$(line_max)
+    )
+)
+
+def scroll_right (
+    if(row |chomp| != $(row_max |chomp| - 1)) (
+        cursor_move +$(line_max|chomp)
+    )
+)
+
+keycommand $key_J ( cmdline -q "mfiler4::mcd $PWD" -1 )
+
+keycommand $key_left      ( if(export VIEW_OPTION |chomp| = 2pain)( activate 0 ) else ( scroll_left ) )
+keycommand $key_ctrl_b    ( if(export VIEW_OPTION |chomp| = 2pain)( activate 0 ) else ( scroll_left ) )
+keycommand $key_right     ( if(export VIEW_OPTION |chomp| = 2pain)( activate 1 ) else ( scroll_right ) )
+keycommand $key_ctrl_f    ( if(export VIEW_OPTION |chomp| = 2pain)( activate 1 ) else ( scroll_right ) )
+
+keycommand $key_ctrl_l    ( mclear_immediately; reread -d 0; reread -d 1 )
+
+keycommand $key_x ( 
+    cursor | chomp | if( | -x) (
+        cmdline "./'$(cursor|chomp)' "  -1
+    ) else (
+        cmdline " ./'$(cursor|chomp)' " 0 
+    )
+)
+
+keycommand $key_backspace ( mcd .. )
+keycommand $key_delete ( mcd .. )
+keycommand $key_delete2 ( mcd .. )
+keycommand $key_ctrl_h ( mcd .. )
+keycommand $key_tilda  ( mcd ~ )
+keycommand $key_backslash ( mcd / )
+
+keycommand $key_1 -external ( fg 1 )
+keycommand $key_2 -external ( fg 2 )
+keycommand $key_3 -external ( fg 3 )
+keycommand $key_4 -external ( fg 4 )
+keycommand $key_5 -external ( fg 5 )
+keycommand $key_6 -external ( fg 6 )
+keycommand $key_7 -external ( fg 7 )
+keycommand $key_8 -external ( fg 8 )
+keycommand $key_9 -external ( fg 9 )
+
+keycommand $key_0 -m ( activate 0 )
+keycommand $key_1 -m ( activate 1 )
+keycommand $key_2 -m ( activate 2 )
+keycommand $key_3 -m ( activate 3 )
+keycommand $key_4 -m ( activate 4 )
+keycommand $key_5 -m ( activate 5 )
+keycommand $key_6 -m ( activate 6 )
+keycommand $key_7 -m ( activate 7 )
+keycommand $key_8 -m ( activate 8 )
+keycommand $key_9 -m ( activate 9 )
+
+keycommand $key_e -external ( vim $(cursor|chomp) )
+keycommand $key_v -external ( less $(cursor|chomp) )
+
+keycommand $key_V          ( mmenu view )
+keycommand $key_s          ( mmenu sort_and_mask )
+keycommand $key_a          ( mmenu attribute )
+keycommand $key_f          ( isearch )
+
+keycommand $key_dot (
+    if(mask -dotdir | chomp | = 0) (
+        mask -dotdir 1
+        mask "^[^\.].*"; 
+        reread -d adir
+    ) else ( 
+        mask -dotdir 0
+        mask ".+"; 
+        reread -d adir
+    )
+)
+
+# save mfiler4 stat on exit
+def save_mfiler4_stat (
+    ( export VIEW_SIZE VIEW_OPTION VIEW_MTIME VIEW_OWNER VIEW_GROUP VIEW_NLINK VIEW_PERMISSION VIEW_DIVIDE_EXTENSION VIEW_FOCUSBACK VIEW_PAGE VIEW_FILE_SIZE VIEW_ADD_STAR_EXE
+        export COLOR_DIR COLOR_EXE COLOR_LINK COLOR_MARK
+        export SORT_KIND SORT_DIR_UP SORT_MARK_UP
+
+        path -d 0
+        mask -d 0
+        mask -d 0 -dotdir
+
+        path -d 1
+        mask -d 1
+        mask -d 1 -dotdir
+
+        dir_num 
+
+        print 2 | var -local I
+        while(I | -lt $(dir_num|chomp)) (
+            path -d $I
+            mask -d $I
+            mask -d $I -dotdir
+
+            ++ I
+        )
+
+    ) > $MF4HOME/stat
+)
+
+# load mfiler4 stat on startup
+def load_mfiler4_stat (
+    cat $MF4HOME/stat | (
+        |12 export VIEW_SIZE VIEW_OPTION VIEW_MTIME VIEW_OWNER VIEW_GROUP VIEW_NLINK VIEW_PERMISSION VIEW_DIVIDE_EXTENSION VIEW_FOCUSBACK VIEW_PAGE VIEW_FILE_SIZE VIEW_ADD_STAR_EXE 
+        |4 export COLOR_DIR COLOR_EXE COLOR_LINK COLOR_MARK 
+        |3 export SORT_KIND SORT_DIR_UP SORT_MARK_UP;
+
+        |1 var -local PATH
+        |1 var -local MASK
+        |1 var -local MASK_DOTDIR
+
+        mcd -d 0 $PATH
+        mask -d 0 $MASK
+        mask -d 0 -dotdir $MASK_DOTDIR
+
+        |1 var -local PATH
+        |1 var -local MASK
+        |1 var -local MASK_DOTDIR
+
+        mcd -d 1 $PATH
+        mask -d 1 $MASK
+        mask -d 1 -dotdir $MASK_DOTDIR
+
+        |1 var -local DIRECTORY_NUMBER
+
+        print 2 | var -local I
+        while(I | -lt $DIRECTORY_NUMBER) (
+            |1 var -local PATH
+            |1 var -local MASK
+            |1 var -local MASK_DOTDIR
+
+            new_dir $PATH -m $MASK -dotdir $MASK_DOTDIR
+            
+            ++ I
+        )
+
+        reread -d all
+    )
+)
+
+if(print $MF4HOME/stat | -e) (
+    load_mfiler4_stat
+) 
+
+def quit -inherit (
+    mfiler4::save_mfiler4_stat
+    inherit
+)
+
+def regex_rename (
+    markfiles | each (
+        | var -local FILE
+        | if( | =~ $ARGV[0]) (
+            print "$FILE -> $(FILE | sub $$(OPTIONS | uniq) $ARGV[0] $ARGV[1] | chomp)"\n
+        ) else (
+            print "$FILE -> $FILE (not rename)"
+        )
+    ) | less
+
+    if(mchoise "rename ok?" no yes |chomp| = yes) (
+        sys::clear
+        markfiles | each ( 
+            | var -local FILE
+
+            | if(| =~ $ARGV[0]) (
+                print "mrename $FILE $(FILE | sub $$(OPTIONS | uniq) $ARGV[0] $ARGV[1]|chomp)"\n
+                mrename $FILE $(FILE | sub $$(OPTIONS | uniq) $ARGV[0] $ARGV[1] | chomp)
+            ) else (
+                print "$FILE (no rename)"\n
+            )
+        )
+    )
+
+    reread -d all
+)
+
+keycommand $key_r ( 
+    marking | chomp | if(|= 1) (
+        cmdline 'mfiler4::regex_rename ' -1
+    ) else (
+        cursor | scan '\.(.+)$' |chomp| | if( | -z) (
+            cmdline -q "mfiler4::mrename -c -r '$(cursor|chomp)' '$(cursor|chomp)'" -2
+        ) else (
+            cursor | length | - $(cursor|chomp|rindex .|chomp) | + 1| var -local M
+            cmdline -q "mfiler4::mrename -c -r '$(cursor|chomp)' '$(cursor|chomp)'" -$M
+        )
+    )
+)
+
+keycommand $key_space     ( mark -t -n $(cursor_num|chomp); cursor_move +1 )
+keycommand $key_colon -external ( bash )
+
+keycommand $key_c (
+    if(export VIEW_OPTION |chomp| = 2pain) ( 
+        mcp $(path -d sdir|chomp) 
+    ) else ( 
+        cmdline -q "mfiler4::mcp $(path|chomp)" -1
+    )
+)
+
+keycommand $key_C (
+    if(export VIEW_OPTION |chomp| = 2pain) (
+        cmdline 'cp -i -R $$(mfiler4::markfiles)'" $(path -d sdir|chomp)" -1 
+    ) else ( 
+        cmdline 'cp -i -R $$(mfiler4::markfiles)'" $(path|chomp)" -1 
+    )
+)
+
+keycommand $key_m ( 
+    if(export VIEW_OPTION |chomp| = 2pain)( 
+        mmv $(path -d sdir|chomp) 
+    ) else ( 
+        cmdline -q "mfiler4::mmv $(path|chomp)" -1
+    )
+)
+
+keycommand $key_M (
+    if(export VIEW_OPTION |chomp| = 2pain)( 
+        cmdline 'mv -i $$(mfiler4::markfiles)'" $(path -d sdir|chomp)" -1 
+    ) else ( 
+        cmdline 'mv -i $$(mfiler4::markfiles)'" $(path|chomp)" -1
+    )
+)
+
+keycommand $key_l (
+    if(export VIEW_OPTION |chomp| = 2pain)( 
+        mln $(path -d sdir|chomp) 
+    ) else ( 
+        cmdline -q "mfiler4::mln $(path|chomp)" -1 
+    )
+)
+
+keycommand $key_d  (
+    if(marking |chomp | = 1 && mchoise "move file to trashbox ok?" yes no |chomp| = yes )( 
+        mtrashbox -f 
+    )
+)
+
+keycommand $key_D (
+    if(marking |chomp| = 1 && mchoise "DELETE file ok?" yes no |chomp| = yes) ( 
+        mrm 
+    )
+)
+
+keycommand $key_b (
+    if(marking | chomp | = 1) (
+        raise "can't get back up on marking files"
+    ) else (
+        cmdline -q "mfiler4::mbackup '$(cursor|chomp).bak'" -6
+    )
+)
+
+keycommand $key_k ( cmdline 'mkdir -p ' -1 )
+
+def new_file (
+    ARGV | each (
+        | chomp | if(! | -e) (
+            print "" > $(| print)
+        )
+    )
+
+    reread -d all
+    cursor_move /$(ARGV | lines -1 (|chomp))
+)
+
+keycommand $key_n ( cmdline -q "mfiler4::new_file " -1 )
+
+keycommand $key_F ( 
+    if(marking | chomp | = 1) (
+        cmdline "sys::find  "'$$(mfiler4::markfiles)'" | mfiler4::vd" 10
+    ) else (
+        cmdline "sys::find .  | scan './(.+)' | mfiler4::vd" 12
+    )
+)
+
+print ~/.mfiler4/tmp | (
+    | export MFILER4_TEMP
+    | if(! | -d) (
+        rm -rf $(|print)
+        mkdir -p $(|print)
+    )
+)
+
+def smake (
+    make $$(ARGV; OPTIONS|uniq) |>
+    
+    if(|> | -z) (raise "make error")
+
+    |> sys::tee $MFILER4_TEMP/mmake
+
+    try (
+        while (true) (
+            cat $MFILER4_TEMP/mmake | selector -preserve-position | scan '^(.+?):(\d+):' | split | var -local FILE NUMBER
+            if (FILE | chomp | -e && NUMBER|chomp| -ge 0) ( 
+                vim +$NUMBER $FILE
+            ) else (
+                break
+            )
+        )
+    ) catch (
+    )
+
+    true
+)
+
+def sgrep (
+    grep -I -n $$(ARGV; OPTIONS|uniq) |>
+    
+    if(|> | -z) (raise "grep error")
+
+    |> sys::tee $MFILER4_TEMP/sgrep
+
+    try (
+        while (true) (
+            cat $MFILER4_TEMP/sgrep | selector -preserve-position | scan '^(.+?):(\d+):' | split | var -local FILE NUMBER
+            if (FILE | chomp | -e && NUMBER|chomp| -ge 0) ( 
+                vim +$NUMBER $FILE
+            ) else (
+                break
+            )
+        )
+    ) catch (
+    )
+
+    true
+)
+
+def segrep (
+    egrep -I -n $$(ARGV; OPTIONS|uniq) |>
+    
+    if(|> | -z) (raise "grep error")
+
+    |> sys::tee $MFILER4_TEMP/sgrep
+
+    try (
+        while (true) (
+            cat $MFILER4_TEMP/sgrep | selector -preserve-position | scan '^(.+?):(\d+):' | split | var -local FILE NUMBER
+            if (FILE | chomp | -e && NUMBER|chomp| -ge 0) ( 
+                vim +$NUMBER $FILE
+            ) else (
+                break
+            )
+        )
+    ) catch (
+    )
+
+    true
+)
+
+keycommand $key_g          ( 
+    if(marking | chomp | = 1) (
+        cmdline "mfiler4::sgrep -R  "'$$(mfiler4::markfiles)' 18
+    ) else (
+        cmdline "mfiler4::sgrep  *" 15
+    )
+)
+
+keycommand $key_G          ( 
+    if(marking | chomp | = 1) (
+        cmdline "grep -R  "'$$(mfiler4::markfiles)'" | scan '^(.+?):' | uniq | mfiler4::vd" 8
+    ) eles (
+        cmdline "grep  * | scan '^(.+?):' | uniq | mfiler4::vd" 5 
+    )
+)
+
+keycommand $key_slash      ( isearch )
+
+keycommand $key_ctrl_c     ( if(mchoise quit\? yes no | = yes\n)( quit ) )
+
+def exchange_2pain_directories (
+    cursor -d 0 | var -local cursor_0dir
+    cursor -d 1 | var -local cursor_1dir
+
+    mask -d 0 |>
+    mask -d 0 $(mask -d 1|chomp)
+    mask -d 1 $(|>chomp)
+
+    mask -d 0 -dotdir |>
+    mask -d 0 -dotdir $(mask -d 1 -dotdir|chomp)
+    mask -dotdir -d 1 $(|>chomp)
+
+    path -d 0|>
+    mcd -d 0 $(path -d 1|chomp)
+    mcd -d 1 $(|>chomp)
+
+    cursor_move -d 0 /$cursor_1dir
+    cursor_move -d 1 /$cursor_0dir
+)
+
+def copy_2pain_directories_0_to_1 (
+    cursor -d 0 | var -local cursor_0dir
+
+    mask -d 1 $(mask -d 0 |chomp)
+    mask -dotdir -d 1 $(mask -d 0 -dotdir |chomp)
+    mcd -d 1 $(path -d 0 | chomp)
+    cursor_move -d 1 /$(cursor_0dir|chomp)
+)
+
+def copy_2pain_directories_1_to_0 (
+    cursor -d 1 | var -local cursor_1dir
+
+    mask -d 0 $(mask -d 1 |chomp)
+    mask -dotdir -d 0 $(mask -d 1 -dotdir |chomp)
+    mcd -d 0 $(path -d 1 | chomp)
+    cursor_move -d 0 /$(cursor_1dir|chomp)
+)
+
+keycommand $key_w (
+    if(export VIEW_OPTION| = 2pain\n) (
+        exchange_2pain_directories
+
+        if(adir |= 1\n) (
+            activate 0
+        ) else (
+            activate 1
+        )
+    )
+)
+
+keycommand $key_o          ( 
+    if(export VIEW_OPTION | = 2pain\n) (
+        if(adir |= 1\n) (
+            copy_2pain_directories_0_to_1
+        ) else (
+            copy_2pain_directories_1_to_0
+        )
+    )
+)
+
+keycommand $key_O          ( 
+    if(export VIEW_OPTION | = 2pain\n) (
+        if(adir |= 1\n) (
+            copy_2pain_directories_1_to_0
+        ) else (
+            copy_2pain_directories_0_to_1
+        )
+    )
+)
+
+keycommand $key_tab       (
+    if(! export VIEW_OPTIOIN | = 2pain\n) (
+        if(adir | = 1\n) (
+            copy_2pain_directories_1_to_0
+            activate 0
+        )
+
+        copy_2pain_directories_0_to_1
+        print 2pain | export VIEW_OPTION
+        activate 1
+    )
+)
+
+keycommand $key_q          ( 
+    if(export VIEW_OPTION | = 2pain\n) (
+        if(adir | = 1\n) (
+            activate 0
+        )
+
+        print 1pain2 | export VIEW_OPTION
+    ) else (
+        if(mchoise quit\? yes no | = yes\n)( 
+            quit 
+        )
+    )
+)
+
+keycommand -m $key_l ( mcd - )
+keycommand -m $key_r ( mcd + )
+
+keycommand $key_ctrl_t    (
+    dir_num | var -local a
+    new_dir ~ -m "^[^\.].*" -dotdir 1
+    activate $a
+)
+
+keycommand $key_ctrl_w    (
+    if(dir_num | -gt 2)( 
+        activate $(dir_num | - 1)
+        del_dir -d $(dir_num | - 1)
+    )
+)
+
+keycommand $key_home       ( mark -t -f -a )
+keycommand -m $key_a       ( mark -t -f -a )
+keycommand $key_end        ( mark -t -a )
+keycommand -m $key_e       ( mark -t -a )
+keycommand $key_pageup     ( cursor_move -10 )
+keycommand $key_ctrl_u     ( cursor_move -10 )
+keycommand -m $key_v       ( cursor_move -10 )
+keycommand $key_pagedown   ( cursor_move +10 )
+keycommand $key_ctrl_v     ( cursor_move +10 )
+keycommand $key_ctrl_d     ( cursor_move +10 )
+keycommand $key_ctrl_a     ( cursor_move 0 ) 
+keycommand $key_ctrl_e     ( cursor_move $(file_num|chomp) )
+
+def run_file_manager (
+    uname -s | if(| index -quiet CYGWIN) (
+        sys::cygstart . &
+    ) elif(| index -quiet Darwin) (
+        sys::open . & 
+    ) else (
+        ps axw | grep -v grep | if (| index -quiet nautilus) (
+            sys::nautilus "$PWD" %2>/dev/null
+        ) elif(| index -quiet kdeinit) (
+            sys::konqueror "$PWD" %2>/dev/null &
+        ) elif(| index -quiet xfdesktop) (
+            sys::thunar "$PWD" %2>/dev/null
+        )
+    )
+)
+
+keycommand $key_exclam ( run_file_manager )
+
+keycommand $key_lbrack (
+    cursor_num | var MARK_RANGE_BEGIN
+)
+
+print -1 | var MARK_RANGE_BEGIN
+
+def mcd -inherit -option-with-argument d (
+    print -1 | var MARK_RANGE_BEGIN
+
+    eval "inherit $(OPTIONS|uniq|join|chomp) $(ARGV|each(|chomp|quote|pomch)|join|chomp)"
+) 
+
+keycommand $key_rbrack    ( 
+    if(MARK_RANGE_BEGIN | != -1\n)( 
+        MARK_RANGE_BEGIN | var -local I
+        while(I | -le $(cursor_num|chomp))( 
+            mark -t -n $I
+            ++ I
+        ) 
+    )
+)
+
+def mark_arguments (
+    ARGV | each (
+        | var -local file
+        mark -t $file
+    )
+
+    false
+)
+
+keycommand $key_star ( cmdline "mfiler4::mark_arguments *" -1 )
+
+def regex_mark (
+    allfiles |each (
+        | var -local file
+
+        if(file | =~ $ARGV[0]) (
+            mark -t $file
+        )
+    )
+
+    false
+)
+
+keycommand $key_plus ( cmdline "mfiler4::regex_mark ''" -2 )
+
+keycommand $key_p (
+    if(export VIEW_OPTION | = 2pain\n)( 
+        if(marking | = 1\n) (
+            path -d sdir | chomp | length | chomp | var -local m
+            m | + 10 | var -local m
+            cmdline "tar cvfz '$(path -d sdir|chomp).tgz' "'$$(mfiler4::markfiles)' $m
+        ) else (
+            path -d sdir | chomp | length | chomp | var -local m
+            m | + 9 | + $(cursor | length | chomp) | var -local m
+            cmdline "tar cvfz '$(path -d sdir|chomp)$(cursor|chomp).tgz' "'$$(mfiler4::markfiles)' $m
+        )
+    ) else ( 
+        cmdline "tar cvfz .tgz "'$$(mfiler4::markfiles)' 9
+    )
+)
+
+keycommand $key_P (
+    if(marking |chomp| = 1) (
+        cmdline "tar cvfz .tgz "'$$(mfiler4::markfiles)' 9 
+    ) else (
+        print 9 | + $(cursor | length | chomp) | var -local m
+        cmdline "tar cvfz '$(cursor|chomp).tgz' "'$$(mfiler4::markfiles)' $m
+    )
+)
+
+keycommand $key_u (
+    cursor | scan '.+\.(.+)$' | chomp | if(|= tgz) (
+        if(export VIEW_OPTION |chomp| = 2pain)( 
+            cmdline "tar xvfz '$(cursor|chomp)' -C '$(path -d sdir|chomp)'" -2
+        ) else ( 
+            cmdline "tar xvfz '$(cursor|chomp)' -C '$(path|chomp)'" -2
+        )
+    ) elif (|= tar) (
+        if(export VIEW_OPTION |chomp| = 2pain)( 
+            cmdline "tar xvf '$(cursor|chomp)' -C '$(path -d sdir|chomp)'" -2
+        ) else ( 
+            cmdline "tar xvf '$(cursor|chomp)' -C '$(path|chomp)'" -2
+        )
+    ) elif (|= zip) (
+        if(marking | chomp | = 1) (
+            if(export VIEW_OPTION |chomp | = 2pain)( 
+                cmdline "sys::unzip '$(cursor|chomp)' -d '$(path -d sdir|chomp)'" -2
+            ) else ( 
+                cmdline "sys::unzip '$(cursor|chomp)' -d '$(path|chomp)'" -2
+            )
+        ) else ( 
+            if(export VIEW_OPTION |chomp| = 2pain)( 
+                cmdline "sys::unzip '$(cursor|chomp)' -d '$(path -d sdir|chomp)'" -2
+            ) else ( 
+                cmdline "sys::unzip '$(cursor|chomp)' -d '$(path|chomp)'" -2
+            )
+        )
+    ) elif (|= gz) (
+        if(export VIEW_OPTION |chomp| = 2pain)( 
+            if(cursor | index -quiet tar.gz) ( 
+                cmdline "tar xvfz '$(cursor|chomp)' -C '$(path -d sdir|chomp)'" -2
+            ) else ( 
+                cmdline "gzip -d '$(cursor|chomp)'" -2
+            ) 
+        ) else ( 
+            if(cursor | index -quiet tar.gz) ( 
+                cmdline "tar xvfz '$(cursor|chomp)' -C '$(path|chomp)'" -2
+            ) else ( 
+                cmdline "gzip -d '$(cursor|chomp)'" -2
+            ) 
+        )
+    )
+)
+
+
+keycommand $key_U (
+    cursor | scan '.+\.(.+)$' | chomp | if(|= tgz) (
+        cmdline "tar xvfz '$(cursor|chomp)' -C '$(path -d adir|chomp)'" -2
+    ) elif (|= tar) (
+        cmdline "tar xvf '$(cursor|chomp)' -C '$(path -d adir|chomp)'" -2
+    ) elif (|= gz) (
+        if(export VIEW_OPTION |chomp| = 2pain)( 
+            if(cursor | index -quiet tar.gz) ( 
+                cmdline "tar xvfz '$(cursor|chomp)' -C '$(path|chomp)'" -2
+            ) else ( 
+                cmdline "gzip -d '$(cursor|chomp)'" -2
+            ) 
+        ) else ( 
+            if(cursor | index -quiet tar.gz) (
+                cmdline "tar xvfz '$(cursor|chomp)' -C '$(path|chomp)'" -2
+            ) else ( 
+                cmdline "gzip -d '$(cursor|chomp)'" -2
+            ) 
+        )
+    ) elif(|= zip) (
+        cmdline "sys::unzip '$(cursor|chomp)' -d '$(path -d adir|chomp)'" -2
+    )
+)
+
+keycommand $key_qmark -external ( mfiler4::help | less )
+
+# jump menu
+def add_jump_menu (
+    print $ARGV[0] | ary -append -1 JUMP_MENU
+
+    make_jump_menu
+)
+
+def clear_jump_menu (
+    if(defined JUMP_MENU) (
+        sweep JUMP_MENU
+    )
+
+    make_jump_menu
+)
+
+def make_jump_menu (
+    defmenu jump
+
+    if(defined JUMP_MENU) (
+        print 0 | var -local I
+        while(I | -lt $(ary -size JUMP_MENU|chomp)) (
+            print 97 | + $I | printf "%c" | var key
+            eval "addmenu jump '($key) $(ary JUMP_MENU -index $I|chomp)' '$(print 97 | + $I)' ( mcd '$(ary JUMP_MENU -index $I|chomp)' )" 
+            ++ I
+        )
+    )
+
+    addmenu jump "-----------------" $key_X -external ( print dummy )
+    addmenu jump '(A)dd current directory to jump mmenu' $key_A ( cmdline "mfiler4::add_jump_menu '$(path -d adir|chomp)'" -2 )
+    addmenu jump '(C)lear jump mmenu' $key_C ( clear_jump_menu )
+)
+
+def save_jump_menu (
+    if(defined JUMP_MENU) (
+        ary JUMP_MENU > $MF4HOME/jump
+    ) else (
+        rm -rf $MF4HOME/jump
+    )
+)
+
+def load_jump_menu (
+    cat $MF4HOME/jump | ary JUMP_MENU
+    make_jump_menu
+)
+
+clear_jump_menu
+
+if(print $MF4HOME/jump | -e) (
+    load_jump_menu
+)
+
+keycommand $key_j ( mmenu jump )
+
+def quit -inherit (
+    mfiler4::save_jump_menu
+
+    inherit
+)
+
+### help ###
+mfiler4::run(
+    object help ( 
+        Help 
+        
+        def main (
+            ### Japanese Manual ####
+            (export LC_ALL LANG) | if(|index -quiet ja || | index -quiet JP) (
+                if(ary -size ARGV |= 0\n) (
+                    if(funinfo | egrep -q '^current object: help<-mfiler4<-root$') (
+                        print "-+- マニュアル -+-" \n \n
+                        cat $MFILER4_DATAROOTDIR/USAGE.ja.txt
+                        print "-+- コマンド -+-" \n \n
+                        hash -La HELPS.ja| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
+                    ) else (
+                        hash -La HELPS.ja| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
+                    )
+                ) elif(hash HELPS.ja -key $ARGV[0] | -z) (
+                    print "$ARGV[0] command doesn't exist"\n
+                ) else (
+                    hash HELPS.ja -key $ARGV[0]
+                )
+            ### English Manual ###
+            ) else (
+                ary -size ARGV | if(| = 0\n ) (
+                    if(funinfo | egrep -q '^current object: help<-mfiler4<-root$') (
+                        cat $MFILER4_DATAROOTDIR/USAGE.txt
+                        hash -La HELPS| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
+                    ) else (
+                        hash -La HELPS| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
+                    )
+                ) elif(hash HELPS -key $ARGV[0] | -z) (
+                    print "$ARGV[0] command doesn't exist"\n
+                ) else (
+                    hash HELPS -key $ARGV[0]
+                )
+            )
+        )
+    )
+
+    print <<<'EOS'
+quit リターンコード
+-
+終了する。リターンコード省略時0.
+-
+keycommand -m/-external キーコード ブロック
+-
+キーバインドを定義します。キーコードのキーが押されるとブロックが実行されます。
+キーコードは環境変数で設定されていて、このドキュメントの最後に一覧があります。
+-m メタキー(Alt)を押してキーを押せばブロックが実行される
+-external 画面制御を行うプログラムがブロック中現れる場合必要となります。（具体的にはcursesをoffにしてブロックを実行します。)
+-
+cursor_move n|+n|-n|/ファイル名
+-
+n カーソル番号のファイルに移動
++n カーソルを下にnだけ移動
+-n カーソルを上にnだけ移動
+/ファイル名 ファイル名のファイルにカーソルを移動
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+mcd dir|+|-
+-
+ディレクトリを移動する
+dir dirに移動
++ ディレクトリを進む
+- ディレクトリを戻る
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+cmdline -q|-c 文字列 カーソル位置
+-
+コマンドラインに移行。
+文字列が最初にコマンドラインに書かれている文字列です。
+カーソル位置は初期カーソル位置です。0が先頭です。-1は末尾です。-2は最後から２番目の文字です。
+-q クィック。コマンドを実行した後カーソル待ちにならない
+-c コンティニュー。コマンドを実行した後もコマンドラインのまま
+-
+file_num
+-
+ファイル数を返す。ディレクトリが指定されなければアクティブディレクトリです。
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+dir_num
+-
+ディレクトリの数を返す
+-
+cursor_num
+-
+カーソルがある位置を返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+cursor
+-
+カーソル位置にあるファイル名を出力する
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+file_name ファイル番号
+-
+ファイル名を返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+file_ext ファイル番号
+-
+ファイルの拡張子名を返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+file_perm ファイル番号
+-
+ファイルのパーミッションを返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+file_group ファイル番号
+-
+ファイルの所有グループ名を返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+file_user ファイル番号
+-
+ファイルの所有ユーザー名を返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+file_index ファイル名
+-
+ファイルのファイル番号を返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+path
+-
+ディレクトリのパスを返す
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+isearch
+-
+インクリメンタルサーチを開始
+-
+mchoise メッセージ 選択肢１ 選択肢２....
+-
+選択肢をユーザーから選んでもらって、その選ばれた選択肢を出力する。
+-
+activate 数値
+-
+ディレクトリ番号のディレクトリをアクティブにする。
+-
+defmenu メニュー名 
+-
+メニューを定義する。
+-
+addmenu メニュー名 タイトル キーコード ブロック
+-
+メニューを追加する。
+-external 画面制御を行うプログラムがブロック中現れる場合必要となります。（具体的にはcursesをoffにしてブロックを実行します。)
+-
+mmenu メニュー名
+-
+メニューを開く
+-
+reread
+-
+指定されたディレクトリを再読み込みする
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+markfiles
+-
+マークされたファイルを表示する。マークしていない場合はカーソルのファイルを表示する。$$()で貼り付けてください
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-fullpath フルパスで表示
+-
+allfiles
+-
+全てのファイルを表示する。$$()で貼り付けてください。
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-fullpath フルパスで表示
+-
+mark
+-
+mark ファイル名 ON(1) or OFF(0)  ファイル名のマークをON or OFFする
+mark -t ファイル名 ファイル名のマークを反転する
+-nをつけるとファイル名のところをファイル番号で指定できます。(このほうが処理が高速です。）
+-t マークを反転する
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-f ディレクトリは除外
+-n 数値で指定する
+-a 全てのファイル
+-
+marking
+-
+そのディレクトリにマークしているファイルがある場合1を出力する。無い場合0を出力する。
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+mclear_immediately
+-
+画面を消去する
+-
+vd
+-
+-d [adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+パイプで受け取ったファイル名のリスト(改行区切り)を仮想ディレクトリとして設定する。ファイルはディスク上に存在していないといけない。
+-
+mcp 目標ディレクトリ
+-
+-p タイムスタンプを保存する
+マークされたファイルをコピーする
+-
+mmv 目標ディレクトリ
+-
+マークされたファイルを移動する
+-p タイムスタンプを保存する
+-f 強制上書き
+-
+mrm 
+-
+マークされたファイルを削除する
+-
+mtrashbox
+-
+マークされたファイルをゴミ箱($TRASHBOX_DIR)に移動する
+-p タイムスタンプを保存する
+-
+mln 目標ディレクトリ
+-
+リンクを作成する
+-
+mrename ファイル名 改名後のファイル名
+-
+ファイルを改名する
+-r 再読み込みする
+-c カーソルを改名後のファイルに移動する
+-
+mask 
+-
+mask -dotdir 0 or 1 .から始まるファイル名のディレクトリの表示、非表示を設定
+mask 正規表現 正規表現にマスクを設定
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-r マスクの設定だけじゃなくてディレクトリを再読み込みする
+-
+new_dir パス
+-
+パスの新しいファイラーディレクトリを作成する
+-m マスク マスクを設定する
+-dotdir 0|1 ドットディレクトリのマスクを設定する
+-
+del_dir
+-
+ファイラーディレクトリを削除する
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+mbackup ファイル名 バックアップファイル名
+-
+-p タイムスタンプを保存する
+バックアップを作成する
+-
+row 
+-
+カーソルの現在の列を出力する
+-
+row_max
+-
+カーソルの列の最大値を出力する
+-
+line
+-
+カーソルの現在の行を出力する
+-
+line_max
+-
+カーソルの行の最大値を出力する
+-
+adir
+-
+アクティブなファイラディレクトリのディレクトリ番号を返す
+-
+sdir
+-
+非アクティブなファイラディレクトリのディレクトリ番号を返す
+-
+kanjicode_file_name
+-
+ファイルシステム エンコーディング 設定
+-utf8-mac UTF8-MAC
+-utf8 UTF8
+-byte byte
+EOS | help::set_helps_ja
+
+    print <<<'EOS'
+quit [return code]
+-
+exit mfiler3
+-
+keycommand [-m/-external] [keycode] [block]
+-
+Define keybind. If the key of keycode is pressed, mfiler4 run the block.
+-m meta(alt) key
+-external If there is controlling terminal program in the block, you need this. It turn curses off before running block.
+-
+cursor_move n|+n|-n|/[file name]
+-
+-d [all|adir|sdir|n] specifies directory
+n move cursor to the cursor number
++n only n moves below
+-n only n moves above
+/[file name] move to the file
+-
+mcd dir|+|-
+-
+-d [all|adir|sdir|n] specifiles directory
+change path of the directory
+dir move to dir
++ forward directory history
+- backward directory history
+-
+cmdline -q|-c [string] [cursor position]
+-
+switch cmdline mode
+string is initial string of the cmdline.
+cursor position is initial cursor position. head is 0. tail is -1.
+-q quick. don't wait after runned command.
+-c continue. continue to cmdline mode after runned command.
+-
+file_num
+-
+return file number. 
+-d [all|adir|sdir|n] specifies directory
+-
+dir_num
+-
+return director number
+-
+cursor_num
+-
+return cursor position
+-d [all|adir|sdir|n] specifies directory
+-
+cursor
+-
+write cursor file name.
+-d [all|adir|sdir|n] specifies directory
+-
+file_name [file number]
+-
+return file name of the file.
+-d [all|adir|sdir|n] specifies directory
+-
+file_ext [file number]
+-
+return file extesion
+-d [all|adir|sdir|n] specifies directory
+-
+file_perm [file number]
+-
+return file permission
+-d [all|adir|sdir|n] specifies directory
+-
+file_group [file number]
+-
+return file group
+-d [all|adir|sdir|n] specifies directory
+-
+file_user [file number]
+-
+return file owner
+-d [all|adir|sdir|n] specifies directory
+-
+file_index [file name]
+-
+return file number of the file
+-d [all|adir|sdir|n] specifies directory
+-
+path
+-
+return directory path
+-d [all|adir|sdir|n] specifies directory
+-
+isearch
+-
+start incremental search
+-
+mchoise message item1 item2 ...
+-
+make user choise the items
+-
+activate [directory number]
+-
+activate diretory which has the number
+-
+defmenu [menu name] 
+-
+define menu
+-
+addmenu [menu name] title keycode block
+-
+add item to the menu
+-external If there is controlling terminal program in the block, you need this. It turn curses off before running block.
+-
+mmenu [menu name]
+-
+open menu
+-
+reread
+-
+reread disk
+-d [all|adir|sdir|n] specifies directory
+-
+markfiles
+-
+write mark files
+-d [all|adir|sdir|n] specifies directory
+-fullpath fullpath
+-
+allfiles
+-
+write all files
+-d [all|adir|sdir|n] specifies directory
+-fullpath fullpath
+-
+mark
+-
+mark [file name] [0 or 1] mark the file or dismark the file
+mark -t [file name] toggle mark the file
+mark -n [file number] [0 or 1] mark the file or dismark the file
+mark -n [file number] -t toggle mark the file
+-d [all|adir|sdir|n] specifies directory
+-f withou directories
+-a all files
+-
+marking
+-
+when mark file exists, write 1.
+-d [all|adir|sdir|n] specifies directory
+-
+mclear_immediately
+-
+clear screen immediately
+-
+vd
+-
+make virtual directory from STDIN
+-d [all|adir|sdir|n] specifies directory
+-
+mcp [target directory]
+-
+copy mark files
+-p preserve time stamp
+-
+mmv [target directory]
+-
+move mark files
+-p preserve time stamp
+-f force overwrite
+-
+mrm 
+-
+remove mark files
+-
+mtrashbox
+-
+move mark files to $TRASHBOX_DIR
+-p preserve time stamp
+-
+mln [target directory]
+-
+make mark file's absolute link
+-
+mrename [file name] [renamed file name]
+-
+rename file name
+-r reread disk
+-c move cursor to renamed file
+-
+mask 
+-
+mask -dotdir 0 or 1 visible dot file or hide dot file
+mask [regex] regex mask
+-d [all|adir|sdir|n] specifies directory
+-r reread disk
+-
+new_dir path
+-
+make directory
+-m MASK set initial mask 
+-dotdir 0|1 set dot directory mask
+-
+del_dir
+-
+remove directory
+-d [all|adir|sdir|n] specifies directory
+-
+mbackup [file name] [backup file name]
+-
+backup the file
+-p preserve time stamp
+-
+row 
+-
+return cursor row position
+-
+row_max
+-
+return cursor row max
+-
+line
+-
+retur curor line position
+-
+line_max
+-
+return cursor line max
+-
+adir
+-
+return active directory number
+-
+sdir
+-
+return disactive directory number
+-
+kanjicode_file_name
+-
+file system encode setting
+-m UTF8-MAC
+-w UTF8
+EOS | help::set_helps
+)
+
+completion mfiler4::help (
+    mfiler4::self | egrep native\ function\$ | root::scan '(^.+?):' | each ( | chomp | quote | pomch )
+    hash COMPLETION_OPTIONS -key help
+)
+

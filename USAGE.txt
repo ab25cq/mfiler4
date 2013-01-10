@@ -1,0 +1,127 @@
+UP, CTRL-P                        cursor up
+DOWN, CTRL-N                      cursor down
+LEFT, CTRL-B                      cursor left
+RIGHT, CTRL-F                     cursor right
+CTRL-A                            cursor top
+CTRL-E                            cursor bottom
+PAGEUP, CTRL-U, meta + v          cursor up a lots
+PAGEDOWN, CTRL-D, CTRL-V          cursor down a lots
+BACKSPACE, CTRL-H, DELETE         move to parent direcotry
+\                                 move to root directory
+~                                 move to home directory
+ENTER                             run cursor file(insert directory)
+tab                               go to 2pain mode
+q                                 quit from 2pain mode or quit from mfiler4
+CTRL-C                            quit
+CTRL-L                            reread diskt and redraw the screen
+SPACE                             mark file
+[                                 mark range begin
+]                                 mark range end
+HOME, meta + a                    mark all files without directory
+END, meta + e                     mark all files
+*                                 glob mark
++                                 regex mark
+.                                 toggle dot file mask
+c                                 copy mark files to other directory
+C                                 cp
+m                                 move mark files to other directory
+M                                 mv
+d                                 move mark files to $TRASHBOX_DIR
+D                                 delete mark files
+l                                 make symbolic links with mark files to a other directory
+e                                 edit file(vim)
+v                                 view file(less)
+r                                 rename
+mark & r                          regex rename (for example, regex_rename '(.+)\.c$' '\1.h')
+a                                 open attribute menu
+n                                 make new file
+k                                 make new direcotry
+b                                 make backup of file under cursor
+g                                 mgrep(grep and edit file)
+G                                 vgrep(virtual directory with grep)
+f,/                               incremental search
+F                                 virtual directory with find
+s                                 open sort and mask menu
+V                                 open view menu
+o,O                               copy direcotry path
+w                                 exchange two directories
+j                                 jump menu
+J                                 cmdline jump
+h                                 switch to command line mode
+x                                 excute under file
+p                                 make tar archive file
+P                                 make tar archive file
+u                                 unzip tar archive file
+U                                 unzip tar archive file
+CTRL-T                            make new directory
+CTRL-W                            delete ative directory
+meta + 1-9                        activate the number directory
+meta + l                          forward directory
+meta + r                          backward directory
+:                                 run bash
+1-9                               forground job
+!                                 run file manager(GUI)
+?                                 help
+
+
+Usage of xyzsh
+    
+    When switching cmdline, run help
+
+mfiler3 inner command
+
+
+keycode
+    $key_up 
+    $key_right 
+    $key_down 
+    $key_left 
+    $key_insert 
+    $key_delete 
+    $key_delete2 
+    $key_home 
+    $key_end 
+    $key_pageup 
+    $key_pagedown 
+    $key_enter 
+    $key_backspace 
+    $key_f1, key_f12
+    $key_a,..., key_z
+    $key_A, ..., key_Z
+    $key_space 
+    $key_ctrl_a, key_ctrl_z
+    $key_escape 
+    $key_tab 
+    $key_0,...,key_9
+    $key_exclam 
+    $key_dquote 
+    $key_sharp 
+    $key_dollar 
+    $key_percent 
+    $key_and
+    $key_squote 
+    $key_lparen 
+    $key_rparen 
+    $key_tilda 
+    $key_equal 
+    $key_minus 
+    $key_cup 
+    $key_vbar 
+    $key_backslash 
+    $key_atmark 
+    $key_bapostrophe 
+    $key_lcurly 
+    $key_lbrack 
+    $key_plus 
+    $key_semicolon 
+    $key_star 
+    $key_colon 
+    $key_rcurly 
+    $key_rbrack 
+    $key_lss 
+    $key_comma 
+    $key_gtr 
+    $key_dot 
+    $key_slash 
+    $key_qmark 
+    $key_underbar 
