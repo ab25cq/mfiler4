@@ -18,11 +18,9 @@ sObject* gMFiler4System;
 
 BOOL cmd_quit(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(xyzsh_job_num() == 0) {
-        if(command->mArgsNumRuntime >= 2) {
-            gMainLoop = atoi(command->mArgsRuntime[1]);
+        if(runinfo->mArgsNumRuntime >= 2) {
+            gMainLoop = atoi(runinfo->mArgsRuntime[1]);
         }
         else {
             gMainLoop = 0;
@@ -39,18 +37,16 @@ BOOL cmd_quit(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_keycommand(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
+    if(runinfo->mBlocksNum == 1 && runinfo->mArgsNumRuntime == 2) {
+        BOOL external = sRunInfo_option(runinfo, "-external");
 
-    if(command->mBlocksNum == 1 && command->mArgsNumRuntime == 2) {
-        BOOL external = sCommand_option_item(command, "-external");
-
-        char* argv1 = command->mArgsRuntime[1];
+        char* argv1 = runinfo->mArgsRuntime[1];
         int keycode = atoi(argv1);
 
         int meta = 0;
-        if(sCommand_option_item(command, "-m")) { meta = 1; }
+        if(sRunInfo_option(runinfo, "-m")) { meta = 1; }
 
-        filer_add_keycommand(meta, keycode, command->mBlocks[0], "run time script", external);
+        filer_add_keycommand(meta, keycode, runinfo->mBlocks[0], "run time script", external);
 
         runinfo->mRCode = 0;
     }
@@ -60,10 +56,8 @@ BOOL cmd_keycommand(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_cursor_move(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
@@ -82,12 +76,12 @@ BOOL cmd_cursor_move(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        char* argv2 = command->mArgsRuntime[1];
+        char* argv2 = runinfo->mArgsRuntime[1];
 
         int cursor_num;
         if(argv2[0] == '+') {
@@ -130,7 +124,7 @@ BOOL cmd_cursor_move(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         else {
             if(!filer_cursor_move(dir, cursor_num)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
 
@@ -143,9 +137,7 @@ BOOL cmd_cursor_move(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    char* darg = sCommand_option_with_argument_item(command, "-d");
+    char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
     int dir;
     if(darg == NULL) {
@@ -165,17 +157,17 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         dir = atoi(darg);
 
         if(dir < 0 || dir >= vector_count(gDirs)) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
     }
 
-    if(command->mArgsNumRuntime == 2) {
-        char* arg1 = command->mArgsRuntime[1];
+    if(runinfo->mArgsNumRuntime == 2) {
+        char* arg1 = runinfo->mArgsRuntime[1];
 
         if(strcmp(arg1, "+") == 0) {
             if(!filer_history_forward(dir)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
 
@@ -183,7 +175,7 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         else if(strcmp(arg1, "-") == 0) {
             if(!filer_history_back(dir)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
 
@@ -191,18 +183,18 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         else {
             if(!filer_cd(dir, arg1)) {
-                err_msg("cd failed", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("cd failed", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
             if(!filer_add_history(dir, arg1)) {
-                err_msg("adding hisotry of mcd failed", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("adding hisotry of mcd failed", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
 
             runinfo->mRCode = 0;
         }
     }
-    else if(command->mArgsNumRuntime == 1) {
+    else if(runinfo->mArgsNumRuntime == 1) {
         char* home = getenv("HOME");
         if(home == NULL) {
             fprintf(stderr, "$HOME is NULL.exit");
@@ -210,11 +202,11 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
          } 
 	
         if(!filer_cd(dir, home)) {
-            err_msg("cd failed", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("cd failed", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         if(!filer_add_history(dir, home)) {
-            err_msg("adding hisotry of mcd failed", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("adding hisotry of mcd failed", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -226,20 +218,18 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -252,22 +242,22 @@ BOOL cmd_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        char* argv2 = command->mArgsRuntime[1];
+        char* argv2 = runinfo->mArgsRuntime[1];
 
         sFile* file = filer_file(dir, atoi(argv2));
         if(file) {
             if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -281,20 +271,18 @@ BOOL cmd_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_path(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -307,7 +295,7 @@ BOOL cmd_path(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -315,12 +303,12 @@ BOOL cmd_path(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         sDir* dir2 = filer_dir(dir);
         if(dir2) {
             if(!fd_write(nextout, string_c_str(dir2->mPath), string_length(dir2->mPath))) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -334,20 +322,18 @@ BOOL cmd_path(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_ext(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -360,23 +346,23 @@ BOOL cmd_file_ext(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        char* argv2 = command->mArgsRuntime[1];
+        char* argv2 = runinfo->mArgsRuntime[1];
         sFile* file = filer_file(dir, atoi(argv2));
         if(file) {
             char buf[PATH_MAX];
             extname(buf, PATH_MAX, string_c_str(file->mName));
             if(!fd_write(nextout, buf, strlen(buf))) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -390,20 +376,18 @@ BOOL cmd_file_ext(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_index(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -416,23 +400,23 @@ BOOL cmd_file_index(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        char* argv1 = command->mArgsRuntime[1];
+        char* argv1 = runinfo->mArgsRuntime[1];
 
         char buf[BUFSIZ];
         int size = snprintf(buf, BUFSIZ, "%d", filer_file2(dir, argv1));
 
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -445,20 +429,18 @@ BOOL cmd_file_index(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_user(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -471,23 +453,23 @@ BOOL cmd_file_user(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        int argv1 = atoi(command->mArgsRuntime[1]);
+        int argv1 = atoi(runinfo->mArgsRuntime[1]);
 
         sFile* file = filer_file(dir, argv1);
 
         if(file) {
             if(!fd_write(nextout, string_c_str(file->mUser), string_length(file->mUser))) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -501,20 +483,18 @@ BOOL cmd_file_user(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_group(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -527,23 +507,23 @@ BOOL cmd_file_group(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        int argv1 = atoi(command->mArgsRuntime[1]);
+        int argv1 = atoi(runinfo->mArgsRuntime[1]);
 
         sFile* file = filer_file(dir, argv1);
 
         if(file) {
             if(!fd_write(nextout, string_c_str(file->mGroup), string_length(file->mGroup))) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -557,20 +537,18 @@ BOOL cmd_file_group(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_perm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -583,12 +561,12 @@ BOOL cmd_file_perm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
-        int argv1 = atoi(command->mArgsRuntime[1]);
+        int argv1 = atoi(runinfo->mArgsRuntime[1]);
 
         sFile* file = filer_file(dir, argv1);
 
@@ -598,12 +576,12 @@ BOOL cmd_file_perm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             char buf[BUFSIZ];
             int size = snprintf(buf, BUFSIZ, "%o", n);
             if(!fd_write(nextout, buf, size)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -617,20 +595,18 @@ BOOL cmd_file_perm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_file_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -643,7 +619,7 @@ BOOL cmd_file_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -653,12 +629,12 @@ BOOL cmd_file_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             char buf[BUFSIZ];
             int size = snprintf(buf, BUFSIZ, "%d", vector_count(dir2->mFiles));
             if(!fd_write(nextout, buf, size)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -672,21 +648,19 @@ BOOL cmd_file_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_dir_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 1) {
+    else if(runinfo->mArgsNumRuntime == 1) {
         char buf[BUFSIZ];
         int size = snprintf(buf, BUFSIZ, "%d", vector_count(gDirs));
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -699,20 +673,18 @@ BOOL cmd_dir_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_cursor_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -725,7 +697,7 @@ BOOL cmd_cursor_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -736,12 +708,12 @@ BOOL cmd_cursor_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             char buf[BUFSIZ];
             int size = snprintf(buf, BUFSIZ, "%d", dir2->mCursor);
             if(!fd_write(nextout, buf, size)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -755,20 +727,18 @@ BOOL cmd_cursor_num(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_cursor(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -781,7 +751,7 @@ BOOL cmd_cursor(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -795,12 +765,12 @@ BOOL cmd_cursor(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 char buf[PATH_MAX];
                 int size = snprintf(buf, PATH_MAX, "%s", string_c_str(cursor->mName));
                 if(!fd_write(nextout, buf, size)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
                 if(!fd_write(nextout, "\n", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
@@ -860,22 +830,21 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
 
 BOOL cmd_cmdline(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-    BOOL quick = sCommand_option_item(command, "-q");
-    BOOL continue_ = sCommand_option_item(command, "-c");
+    BOOL quick = sRunInfo_option(runinfo, "-q");
+    BOOL continue_ = sRunInfo_option(runinfo, "-c");
 
-    if(command->mArgsNumRuntime == 1) {
+    if(runinfo->mArgsNumRuntime == 1) {
         cmdline_start("", 0, quick, continue_);
         runinfo->mRCode = 0;
     }
-    else if(command->mArgsNumRuntime == 2) {
-        char* init_str = command->mArgsRuntime[1];
+    else if(runinfo->mArgsNumRuntime == 2) {
+        char* init_str = runinfo->mArgsRuntime[1];
         cmdline_start(init_str, -1, quick, continue_);
         runinfo->mRCode = 0;
     }
-    else if(command->mArgsNumRuntime == 3) {
-        char* init_str = command->mArgsRuntime[1];
-        int cursor = atoi(command->mArgsRuntime[2]);
+    else if(runinfo->mArgsNumRuntime == 3) {
+        char* init_str = runinfo->mArgsRuntime[1];
+        int cursor = atoi(runinfo->mArgsRuntime[2]);
         cmdline_start(init_str, cursor, quick, continue_);
         runinfo->mRCode = 0;
     }
@@ -885,11 +854,10 @@ BOOL cmd_cmdline(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_activate(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-    if(command->mArgsNumRuntime == 2) {
-        int n = atoi(command->mArgsRuntime[1]);
+    if(runinfo->mArgsNumRuntime == 2) {
+        int n = atoi(runinfo->mArgsRuntime[1]);
         if(!filer_activate(n)) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -902,10 +870,8 @@ BOOL cmd_activate(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_defmenu(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime == 2) {
-        char* menu_name = command->mArgsRuntime[1];
+    if(runinfo->mArgsNumRuntime == 2) {
+        char* menu_name = runinfo->mArgsRuntime[1];
         
         menu_create(menu_name);
 
@@ -917,19 +883,17 @@ BOOL cmd_defmenu(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_addmenu(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime == 4 && command->mBlocksNum == 1) {
-        char* menu_name = command->mArgsRuntime[1];
-        char* title = command->mArgsRuntime[2];
-        int key = atoi(command->mArgsRuntime[3]);
-        BOOL external = sCommand_option_item(command, "-external");
+    if(runinfo->mArgsNumRuntime == 4 && runinfo->mBlocksNum == 1) {
+        char* menu_name = runinfo->mArgsRuntime[1];
+        char* title = runinfo->mArgsRuntime[2];
+        int key = atoi(runinfo->mArgsRuntime[3]);
+        BOOL external = sRunInfo_option(runinfo, "-external");
         
-        if(!menu_append(menu_name, title, key, command->mBlocks[0], external))
+        if(!menu_append(menu_name, title, key, runinfo->mBlocks[0], external))
         {
              char buf[128];
             snprintf(buf, 128, "not found menu of %s", menu_name);
-            err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -941,15 +905,13 @@ BOOL cmd_addmenu(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mmenu(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime == 2) {
-        char* menu_name = command->mArgsRuntime[1];
+    if(runinfo->mArgsNumRuntime == 2) {
+        char* menu_name = runinfo->mArgsRuntime[1];
 
         if(!set_active_menu(menu_name)) {
             char buf[128];
             snprintf(buf, 128, "not found this menu(%s)", menu_name);
-            err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -961,10 +923,8 @@ BOOL cmd_mmenu(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_reread(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
@@ -983,7 +943,7 @@ BOOL cmd_reread(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -997,7 +957,7 @@ BOOL cmd_reread(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         else {
             if(!filer_reread(dir)) {
-                err_msg("reread error", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("reread error", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
             runinfo->mRCode = 0;
@@ -1009,14 +969,12 @@ BOOL cmd_reread(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(sCommand_option_item(command, "-fullpath")) {
-        if(command->mArgsNumRuntime == 1) {
-            char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(sRunInfo_option(runinfo, "-fullpath")) {
+        if(runinfo->mArgsNumRuntime == 1) {
+            char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
             int dir;
             if(darg == NULL) {
@@ -1035,7 +993,7 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 dir = atoi(darg);
 
                 if(dir < 0 || dir >= vector_count(gDirs)) {
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
             }
@@ -1058,12 +1016,12 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                                 xstrncat(path, string_c_str(file->mName), PATH_MAX);
 
                                 if(!fd_write(nextout, path, strlen(path))) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
                                 if(!fd_write(nextout, "\n", 1)) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
@@ -1087,12 +1045,12 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                             xstrncat(path, string_c_str(file->mName), PATH_MAX);
 
                             if(!fd_write(nextout, path, strlen(path))) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
                             if(!fd_write(nextout, "\n", 1)) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
@@ -1105,8 +1063,8 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
     }
     else {
-        if(command->mArgsNumRuntime == 1) {
-            char* darg = sCommand_option_with_argument_item(command, "-d");
+        if(runinfo->mArgsNumRuntime == 1) {
+            char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
             int dir;
             if(darg == NULL) {
@@ -1125,7 +1083,7 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 dir = atoi(darg);
 
                 if(dir < 0 || dir >= vector_count(gDirs)) {
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
             }
@@ -1144,12 +1102,12 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                                 && strcmp(string_c_str(file->mName), "..") != 0) 
                             {
                                 if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
                                 if(!fd_write(nextout, "\n", 1)) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
@@ -1169,12 +1127,12 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                             && strcmp(string_c_str(file->mName), "..") != 0) 
                         {
                             if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
                             if(!fd_write(nextout, "\n", 1)) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
@@ -1192,14 +1150,12 @@ BOOL cmd_allfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(sCommand_option_item(command, "-fullpath")) {
-        if(command->mArgsNumRuntime == 1) {
-            char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(sRunInfo_option(runinfo, "-fullpath")) {
+        if(runinfo->mArgsNumRuntime == 1) {
+            char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
             int dir;
             if(darg == NULL) {
@@ -1218,7 +1174,7 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 dir = atoi(darg);
 
                 if(dir < 0 || dir >= vector_count(gDirs)) {
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
             }
@@ -1239,12 +1195,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                                     xstrncat(path, string_c_str(file->mName), PATH_MAX);
 
                                     if(!fd_write(nextout, path, strlen(path))) {
-                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                         runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                         return FALSE;
                                     }
                                     if(!fd_write(nextout, "\n", 1)) {
-                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                         runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                         return FALSE;
                                     }
@@ -1262,12 +1218,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                             xstrncat(path, string_c_str(file->mName), PATH_MAX);
 
                             if(!fd_write(nextout, path, strlen(path))) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
                             if(!fd_write(nextout, "\n", 1)) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
@@ -1289,12 +1245,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                                 xstrncat(path, string_c_str(file->mName), PATH_MAX);
 
                                 if(!fd_write(nextout, path, strlen(path))) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
                                 if(!fd_write(nextout, "\n", 1)) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
@@ -1312,12 +1268,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         xstrncat(path, string_c_str(file->mName), PATH_MAX);
 
                         if(!fd_write(nextout, path, strlen(path))) {
-                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                             return FALSE;
                         }
                         if(!fd_write(nextout, "\n", 1)) {
-                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                             return FALSE;
                         }
@@ -1329,8 +1285,8 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
     }
     else {
-        if(command->mArgsNumRuntime == 1) {
-            char* darg = sCommand_option_with_argument_item(command, "-d");
+        if(runinfo->mArgsNumRuntime == 1) {
+            char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
             int dir;
             if(darg == NULL) {
@@ -1349,7 +1305,7 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 dir = atoi(darg);
 
                 if(dir < 0 || dir >= vector_count(gDirs)) {
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
             }
@@ -1366,12 +1322,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                                 sFile* file = vector_item(dir2->mFiles, j);
                                 if(file->mMark) {
                                     if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                         runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                         return FALSE;
                                     }
                                     if(!fd_write(nextout, "\n", 1)) {
-                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                        err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                         runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                         return FALSE;
                                     }
@@ -1384,12 +1340,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
                         if(file) {
                             if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
                             if(!fd_write(nextout, "\n", 1)) {
-                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                 return FALSE;
                             }
@@ -1407,12 +1363,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                             sFile* file = vector_item(dir2->mFiles, j);
                             if(file->mMark) {
                                 if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
                                 if(!fd_write(nextout, "\n", 1)) {
-                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                                     return FALSE;
                                 }
@@ -1425,12 +1381,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
                     if(file) {
                         if(!fd_write(nextout, string_c_str(file->mName), string_length(file->mName))) {
-                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                             return FALSE;
                         }
                         if(!fd_write(nextout, "\n", 1)) {
-                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                             return FALSE;
                         }
@@ -1447,14 +1403,12 @@ BOOL cmd_markfiles(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
+    BOOL toggle = sRunInfo_option(runinfo, "-t");
+    BOOL files = sRunInfo_option(runinfo, "-f");
+    BOOL number = sRunInfo_option(runinfo, "-n");
+    BOOL all = sRunInfo_option(runinfo, "-a");
 
-    BOOL toggle = sCommand_option_item(command, "-t");
-    BOOL files = sCommand_option_item(command, "-f");
-    BOOL number = sCommand_option_item(command, "-n");
-    BOOL all = sCommand_option_item(command, "-a");
-
-    char* darg = sCommand_option_with_argument_item(command, "-d");
+    char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
     int dir;
     if(darg == NULL) {
@@ -1473,19 +1427,19 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         dir = atoi(darg);
 
         if(dir < 0 || dir >= vector_count(gDirs)) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
     }
 
     /// 状態参照 ///
-    if(!all && !toggle && command->mArgsNumRuntime == 2)
+    if(!all && !toggle && runinfo->mArgsNumRuntime == 2)
     {
         if(mis_raw_mode() && nextout == gStdout) {
             return TRUE;
         }
 
-        char* arg1 = command->mArgsRuntime[1];
+        char* arg1 = runinfo->mArgsRuntime[1];
 
         int arg1_num;
         if(number) {
@@ -1498,12 +1452,12 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         if(arg1_num >= 0) {
             if(filer_mark(dir, arg1_num)) {
                 if(!fd_write(nextout, "1", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
                 if(!fd_write(nextout, "\n", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
@@ -1512,12 +1466,12 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             }
             else {
                 if(!fd_write(nextout, "0", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
                 if(!fd_write(nextout, "\n", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
@@ -1527,7 +1481,7 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
     }
     /// 状態セット all toggleオン ///
-    else if(all && toggle && command->mArgsNumRuntime == 1) {
+    else if(all && toggle && runinfo->mArgsNumRuntime == 1) {
         sDir* dir2 = filer_dir(dir);
 
         if(dir2) {
@@ -1547,8 +1501,8 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
     }
     /// 状態セット all toggleオフ 数値指定 ///
-    else if(all && !toggle && command->mArgsNumRuntime == 2) {
-        int arg1 = atoi(command->mArgsRuntime[1]);
+    else if(all && !toggle && runinfo->mArgsNumRuntime == 2) {
+        int arg1 = atoi(runinfo->mArgsRuntime[1]);
 
         sDir* dir2 = filer_dir(dir);
 
@@ -1570,8 +1524,8 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     /// 状態セット ファイルひとつ ///
-    else if(!all && !toggle && command->mArgsNumRuntime == 3) {
-        char* arg1 = command->mArgsRuntime[1];
+    else if(!all && !toggle && runinfo->mArgsNumRuntime == 3) {
+        char* arg1 = runinfo->mArgsRuntime[1];
 
         int arg1_num;
         if(number) {
@@ -1581,10 +1535,10 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             arg1_num = filer_file2(dir, arg1);
         }
 
-        int arg2 = atoi(command->mArgsRuntime[2]);
+        int arg2 = atoi(runinfo->mArgsRuntime[2]);
         if(arg1_num >= 0) {
             if(!filer_set_mark(dir, arg1_num, arg2 != 0)) {
-                err_msg("invalid range", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid range", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -1593,8 +1547,8 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     /// 状態セット ファイルひとつ ///
-    else if(!all && toggle && command->mArgsNumRuntime == 2) {
-        char* arg1 = command->mArgsRuntime[1];
+    else if(!all && toggle && runinfo->mArgsNumRuntime == 2) {
+        char* arg1 = runinfo->mArgsRuntime[1];
 
         int arg1_num;
         if(number) {
@@ -1606,7 +1560,7 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
         if(arg1_num >= 0) {
             if(!filer_toggle_mark(dir, arg1_num)) {
-                err_msg("invalid range", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid range", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -1619,16 +1573,14 @@ BOOL cmd_mark(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_new_dir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     char* mask;
-    mask = sCommand_option_with_argument_item(command, "-m");
+    mask = sRunInfo_option_with_argument(runinfo, "-m");
     if(mask == NULL) {
         mask = ".+";
     }
 
     BOOL dotdir_mask;
-    char* dotdir_mask_arg = sCommand_option_with_argument_item(command, "-dotdir");
+    char* dotdir_mask_arg = sRunInfo_option_with_argument(runinfo, "-dotdir");
     if(dotdir_mask_arg == NULL) {
         dotdir_mask = FALSE;
     }
@@ -1636,10 +1588,10 @@ BOOL cmd_new_dir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         dotdir_mask = atoi(dotdir_mask_arg);
     }
 
-    if(command->mArgsNumRuntime == 2) {
-        char* dir = command->mArgsRuntime[1];
+    if(runinfo->mArgsNumRuntime == 2) {
+        char* dir = runinfo->mArgsRuntime[1];
         if(!filer_new_dir(dir, dotdir_mask, mask)) {
-            err_msg("invalid path", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid path", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -1651,17 +1603,15 @@ BOOL cmd_new_dir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_del_dir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -1674,13 +1624,13 @@ BOOL cmd_del_dir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
         if(!filer_del_dir(dir)) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -1692,20 +1642,18 @@ BOOL cmd_del_dir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_marking(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
-    else if(command->mArgsNumRuntime == 1) {
-        char* darg = sCommand_option_with_argument_item(command, "-d");
+    else if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
         int dir;
         if(darg == NULL) {
             dir = adir();
         }
         else if(strcmp(darg, "all") == 0) {
-            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         else if(strcmp(darg, "adir") == 0) {
@@ -1718,31 +1666,31 @@ BOOL cmd_marking(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             dir = atoi(darg);
 
             if(dir < 0 || dir >= vector_count(gDirs)) {
-                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
 
         if(filer_marking(dir)) {
             if(!fd_write(nextout, "1", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
         }
         else {
             if(!fd_write(nextout, "0", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -1756,11 +1704,9 @@ BOOL cmd_marking(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    BOOL dotdir = sCommand_option_item(command, "-dotdir");
-    BOOL reread = sCommand_option_item(command, "-r");
-    char* darg = sCommand_option_with_argument_item(command, "-d");
+    BOOL dotdir = sRunInfo_option(runinfo, "-dotdir");
+    BOOL reread = sRunInfo_option(runinfo, "-r");
+    char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
     int dir;
     if(darg == NULL) {
@@ -1779,7 +1725,7 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         dir = atoi(darg);
 
         if(dir < 0 || dir >= vector_count(gDirs)) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
     }
@@ -1787,35 +1733,35 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
     if(dotdir) {
         /// 状態参照 ///
-        if(command->mArgsNumRuntime == 1) {
+        if(runinfo->mArgsNumRuntime == 1) {
             if(mis_raw_mode() && nextout == gStdout) {
                 return TRUE;
             }
             if(dir < 0) {
-                err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
 
             if(filer_dotdir_mask(dir)) {
                 if(!fd_write(nextout, "1", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
                 if(!fd_write(nextout, "\n", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
             }
             else {
                 if(!fd_write(nextout, "0", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
                 if(!fd_write(nextout, "\n", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
@@ -1825,8 +1771,8 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
 
         /// 状態セット ///
-        else if(command->mArgsNumRuntime == 2) {
-            int arg2 = atoi(command->mArgsRuntime[1]);
+        else if(runinfo->mArgsNumRuntime == 2) {
+            int arg2 = atoi(runinfo->mArgsRuntime[1]);
 
             if(dir < 0) {
                 int i;
@@ -1837,7 +1783,7 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             else {
                 if(!filer_set_dotdir_mask(dir, arg2 != 0)) 
                 {
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
             }
@@ -1847,24 +1793,24 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
     else {
         /// 状態参照 ///
-        if(command->mArgsNumRuntime == 1) {
+        if(runinfo->mArgsNumRuntime == 1) {
             if(mis_raw_mode() && nextout == gStdout) {
                 return TRUE;
             }
             if(dir < 0) {
-                err_msg("invalid use. mask -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("invalid use. mask -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
 
             char* p = filer_mask(dir);
             if(p) {
                 if(!fd_write(nextout, p, strlen(p))) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
                 if(!fd_write(nextout, "\n", 1)) {
-                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                     return FALSE;
                 }
@@ -1874,12 +1820,12 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
 
         /// 状態セット ///
-        else if(command->mArgsNumRuntime == 2) {
+        else if(runinfo->mArgsNumRuntime == 2) {
             if(dir < 0) {
                 int i;
                 for(i=0; i<vector_count(gDirs); i++) {
-                    if(!filer_set_mask(i, command->mArgsRuntime[1])) {
-                        err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    if(!filer_set_mask(i, runinfo->mArgsRuntime[1])) {
+                        err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                         return FALSE;
                     }
                 }
@@ -1890,8 +1836,8 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 }
             }
             else {
-                if(!filer_set_mask(dir, command->mArgsRuntime[1])) {
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                if(!filer_set_mask(dir, runinfo->mArgsRuntime[1])) {
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
 
@@ -1912,16 +1858,14 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_vd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    char* darg = sCommand_option_with_argument_item(command, "-d");
+    char* darg = sRunInfo_option_with_argument(runinfo, "-d");
 
     int dir;
     if(darg == NULL) {
         dir = adir();
     }
     else if(strcmp(darg, "all") == 0) {
-        err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+        err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
         return FALSE;
     }
     else if(strcmp(darg, "adir") == 0) {
@@ -1934,7 +1878,7 @@ BOOL cmd_vd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         dir = atoi(darg);
 
         if(dir < 0 || dir >= vector_count(gDirs)) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
     }
@@ -1943,11 +1887,11 @@ BOOL cmd_vd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         fd_split(nextin, kLF);
 
         if(!filer_vd_start(dir))  {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
         if(!filer_vd_add(dir, "..")) {
-            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -1963,14 +1907,14 @@ BOOL cmd_vd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             if(strcmp(string_c_str(line2), "") != 0) {
                 if(!filer_vd_add(dir, string_c_str(line2))) {
                     stack_end_stack();
-                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     return FALSE;
                 }
             }
 
             if(gXyzshSigInt) {
                 stack_end_stack();
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
         }
@@ -1985,31 +1929,29 @@ BOOL cmd_vd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mrename(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
+    BOOL reread = sRunInfo_option(runinfo, "-r");
+    BOOL cursor_move = sRunInfo_option(runinfo, "-c");
 
-    BOOL reread = sCommand_option_item(command, "-r");
-    BOOL cursor_move = sCommand_option_item(command, "-c");
-
-    if(command->mArgsNumRuntime == 3) {
-        char* source = command->mArgsRuntime[1];
-        char* distination = command->mArgsRuntime[2];
+    if(runinfo->mArgsNumRuntime == 3) {
+        char* source = runinfo->mArgsRuntime[1];
+        char* distination = runinfo->mArgsRuntime[2];
 
         if(access(source, F_OK) != 0) {
             char buf[128];
             snprintf(buf, 128, "%s does not exist.", distination);
-            err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
         if(access(distination, F_OK) == 0) {
             char buf[128];
             snprintf(buf, 128, "%s exists. can't rename", distination);
-            err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
         if(rename(source, distination) < 0) {
-            err_msg("rename error", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("rename error", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
         }
 
@@ -2030,8 +1972,6 @@ BOOL cmd_mrename(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_row(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
@@ -2039,12 +1979,12 @@ BOOL cmd_row(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         char buf[BUFSIZ];
         int size = snprintf(buf, BUFSIZ, "%d", filer_row(adir()));
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -2056,8 +1996,6 @@ BOOL cmd_row(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_row_max(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-    
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
@@ -2065,12 +2003,12 @@ BOOL cmd_row_max(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         char buf[BUFSIZ];
         int size = snprintf(buf, BUFSIZ, "%d", filer_row_max(adir()));
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -2082,8 +2020,6 @@ BOOL cmd_row_max(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_line(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
@@ -2091,12 +2027,12 @@ BOOL cmd_line(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         char buf[BUFSIZ];
         int size = snprintf(buf, BUFSIZ, "%d", filer_line(adir()));
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -2108,8 +2044,6 @@ BOOL cmd_line(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_line_max(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
@@ -2117,12 +2051,12 @@ BOOL cmd_line_max(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         char buf[BUFSIZ];
         int size = snprintf(buf, BUFSIZ, "%d", filer_line_max(adir()));
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -2149,22 +2083,20 @@ static void draw_progress_box(int mark_num)
 
 BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     BOOL raw_mode = mis_raw_mode();
     if(!raw_mode) {
         xinitscr();
     }
 
-    BOOL preserve = sCommand_option_item(command, "-p");
+    BOOL preserve = sRunInfo_option(runinfo, "-p");
 
-    if(command->mArgsNumRuntime == 2) {
+    if(runinfo->mArgsNumRuntime == 2) {
         gCopyOverride = kNone;
         gWriteProtected = kWPNone;
 
         /// 引数チェック ///
         char distination[PATH_MAX];
-        xstrncpy(distination, command->mArgsRuntime[1], PATH_MAX);
+        xstrncpy(distination, runinfo->mArgsRuntime[1], PATH_MAX);
 
         /// 対象がディレクトリかチェック ///
         if(distination[strlen(distination)-1] != '/')
@@ -2186,7 +2118,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 if(system(buf) < 0) {
                     char buf[128];
                     snprintf(buf, 128, "mcp: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     if(!raw_mode) {
                         endwin();
                     }
@@ -2196,7 +2128,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             else {
                 char buf[128];
                 snprintf(buf, 128, "mcp: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 if(!raw_mode) {
                     endwin();
                 }
@@ -2209,7 +2141,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
             char buf[128];
             snprintf(buf, 128, "mcp: distination is not directory");
-            err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             if(!raw_mode) {
                 endwin();
             }
@@ -2258,7 +2190,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     }
                 }
             }
-            vector_delete_malloc(markfiles);
+            vector_delete_on_malloc(markfiles);
             
             /*
             mclear();
@@ -2289,16 +2221,14 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     BOOL raw_mode = mis_raw_mode();
     if(!raw_mode) {
         xinitscr();
     }
 
-    BOOL preserve = sCommand_option_item(command, "-p");
+    BOOL preserve = sRunInfo_option(runinfo, "-p");
 
-    if(command->mArgsNumRuntime == 2) {
+    if(runinfo->mArgsNumRuntime == 2) {
         gCopyOverride = kNone;
         gWriteProtected = kWPNone;
 
@@ -2308,11 +2238,11 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             /// 引数チェック ///
             char distination[PATH_MAX];
             xstrncpy(distination, string_c_str(dir->mPath), PATH_MAX);
-            xstrncat(distination, command->mArgsRuntime[1], PATH_MAX);
+            xstrncat(distination, runinfo->mArgsRuntime[1], PATH_MAX);
 
             /// 対象があるかどうかチェック ///
             if(access(distination, F_OK) == 0) {
-                err_msg("distination exists", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("distination exists", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 if(!raw_mode) {
                     endwin();
                 }
@@ -2335,7 +2265,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     {
                         char buf[128];
                         snprintf(buf, 128, "%s doesn't exist", fname);
-                        err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                        err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                         if(!raw_mode) {
                             endwin();
                         }
@@ -2350,7 +2280,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         refresh();
                         
                         if(!file_copy(source, distination, FALSE, preserve)) {
-                            err_msg("", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                            err_msg("", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                             if(!raw_mode) {
                                 endwin();
                             }
@@ -2375,17 +2305,15 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     BOOL raw_mode = mis_raw_mode();
     if(!raw_mode) {
         xinitscr();
     }
 
-    BOOL force = sCommand_option_item(command, "-f");
-    BOOL preserve = sCommand_option_item(command, "-p");
+    BOOL force = sRunInfo_option(runinfo, "-f");
+    BOOL preserve = sRunInfo_option(runinfo, "-p");
 
-    if(command->mArgsNumRuntime == 2) {
+    if(runinfo->mArgsNumRuntime == 2) {
         if(force) {
             gCopyOverride = kYesAll;
         }
@@ -2397,7 +2325,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
         /// 引数チェック ///
         char distination[PATH_MAX];
-        xstrncpy(distination, command->mArgsRuntime[1], PATH_MAX);
+        xstrncpy(distination, runinfo->mArgsRuntime[1], PATH_MAX);
 
         /// 対象がディレクトリ ///
         if(distination[strlen(distination)-1] != '/') {
@@ -2419,7 +2347,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 if(system(buf) < 0) {
                     char buf[128];
                     snprintf(buf, 128, "mmv: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     if(!raw_mode) {
                         endwin();
                     }
@@ -2429,7 +2357,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             else {
                 char buf[128];
                 snprintf(buf, 128, "mmv: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 if(!raw_mode) {
                     endwin();
                 }
@@ -2440,7 +2368,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         /// 目標ファイルがディレクトリかどうかチェック ///
         struct stat dstat;
         if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            err_msg("mmv: distination is not directory", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("mmv: distination is not directory", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             if(!raw_mode) {
                 endwin();
             }
@@ -2488,7 +2416,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     }
                 }
             }
-            vector_delete_malloc(markfiles);
+            vector_delete_on_malloc(markfiles);
 
             /*
             mclear();
@@ -2511,15 +2439,13 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     BOOL raw_mode = mis_raw_mode();
     if(!raw_mode) {
         xinitscr();
     }
 
     if(!mis_raw_mode()) {
-        err_msg("invalid terminal setting. not raw mode", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+        err_msg("invalid terminal setting. not raw mode", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
 
         if(!raw_mode) {
             endwin();
@@ -2527,7 +2453,7 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         return FALSE;
     }
                 
-    if(command->mArgsNumRuntime == 1) {
+    if(runinfo->mArgsNumRuntime == 1) {
         gCopyOverride = kNone;
         gWriteProtected = kWPNone;
 
@@ -2572,7 +2498,7 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 }
             }
         }
-        vector_delete_malloc(markfiles);
+        vector_delete_on_malloc(markfiles);
         
         /*
         mclear();
@@ -2594,17 +2520,15 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     BOOL raw_mode = mis_raw_mode();
     if(!raw_mode) {
         xinitscr();
     }
 
-    BOOL force = sCommand_option_item(command, "-f");
-    BOOL preserve = sCommand_option_item(command, "-p");
+    BOOL force = sRunInfo_option(runinfo, "-f");
+    BOOL preserve = sRunInfo_option(runinfo, "-p");
 
-    if(command->mArgsNumRuntime == 1) {
+    if(runinfo->mArgsNumRuntime == 1) {
         if(force) {
             gCopyOverride = kYesAll;
         }
@@ -2645,7 +2569,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 if(system(buf) < 0) {
                     char buf[128];
                     snprintf(buf, 128, "mmv: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
 
                     if(!raw_mode) {
                         endwin();
@@ -2656,7 +2580,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             else {
                 char buf[128];
                 snprintf(buf, 128, "mmv: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
 
                 if(!raw_mode) {
                     endwin();
@@ -2668,7 +2592,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         /// 目標ファイルがディレクトリかどうかチェック ///
         struct stat dstat;
         if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            err_msg("mmv: distination is not directory", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("mmv: distination is not directory", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
 
             if(!raw_mode) {
                 endwin();
@@ -2717,7 +2641,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     }
                 }
             }
-            vector_delete_malloc(markfiles);
+            vector_delete_on_malloc(markfiles);
 
             /*
             mclear();
@@ -2740,17 +2664,15 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     BOOL raw_mode = mis_raw_mode();
     if(!raw_mode) {
         xinitscr();
     }
 
-    if(command->mArgsNumRuntime == 2) {
+    if(runinfo->mArgsNumRuntime == 2) {
         /// 引数チェック ///
         char distination[PATH_MAX];
-        xstrncpy(distination, command->mArgsRuntime[1], PATH_MAX);
+        xstrncpy(distination, runinfo->mArgsRuntime[1], PATH_MAX);
 
         if(distination[strlen(distination)-1] != '/') {
             xstrncat(distination, "/", PATH_MAX);
@@ -2770,7 +2692,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 if(system(buf) < 0) {
                     char buf[128];
                     snprintf(buf, 128, "mcp: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                    err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                     if(!raw_mode) {
                         endwin();
                     }
@@ -2780,7 +2702,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             else {
                 char buf[128];
                 snprintf(buf, 128, "mcp: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg(buf, runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 if(!raw_mode) {
                     endwin();
                 }
@@ -2791,7 +2713,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         /// 目標ディレクトリがディレクトリじゃないならエラー ///
         struct stat dstat;
         if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            err_msg("mcp: distination is not directory", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("mcp: distination is not directory", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             if(!raw_mode) {
                 endwin();
             }
@@ -2844,7 +2766,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     }
                 }
             }
-            vector_delete_malloc(markfiles);
+            vector_delete_on_malloc(markfiles);
 
             /*
             mclear();
@@ -2875,23 +2797,21 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_mchoise(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(command->mArgsNumRuntime >= 3) {
+    if(runinfo->mArgsNumRuntime >= 3) {
         BOOL make_raw = FALSE;
         if(!mis_raw_mode()) {
             make_raw = TRUE;
             xinitscr();
         }
-        char* msg = command->mArgsRuntime[1];
-        char** str = MALLOC(sizeof(char*)*command->mArgsNumRuntime);
+        char* msg = runinfo->mArgsRuntime[1];
+        char** str = MALLOC(sizeof(char*)*runinfo->mArgsNumRuntime);
 
         int j;
-        for(j=2; j<command->mArgsNumRuntime; j++) {
-            str[j-2] = command->mArgsRuntime[j];
+        for(j=2; j<runinfo->mArgsNumRuntime; j++) {
+            str[j-2] = runinfo->mArgsRuntime[j];
         }
 
-        char* smsg = choise(msg, str, command->mArgsNumRuntime -2, -1);
+        char* smsg = choise(msg, str, runinfo->mArgsNumRuntime -2, -1);
         FREE(str);
         char buf[BUFSIZ];
         int size;
@@ -2903,12 +2823,12 @@ BOOL cmd_mchoise(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
 
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -2928,17 +2848,15 @@ BOOL cmd_mchoise(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_kanjicode_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
-    if(sCommand_option_item(command, "-byte")) {
+    if(sRunInfo_option(runinfo, "-byte")) {
         gKanjiCodeFileName = kByte;
         runinfo->mRCode = 0;
     }
-    else if(sCommand_option_item(command, "-utf8")) {
+    else if(sRunInfo_option(runinfo, "-utf8")) {
         gKanjiCodeFileName = kUtf8;
         runinfo->mRCode = 0;
     }
-    else if(sCommand_option_item(command, "-utf8-mac")) {
+    else if(sRunInfo_option(runinfo, "-utf8-mac")) {
         gKanjiCodeFileName = kUtf8Mac;
         runinfo->mRCode = 0;
     }
@@ -2948,12 +2866,12 @@ BOOL cmd_kanjicode_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinf
         }
         else if(gKanjiCodeFileName == kByte) {
             if(!fd_write(nextout, "byte", 4)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -2962,12 +2880,12 @@ BOOL cmd_kanjicode_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinf
         }
         else if(gKanjiCodeFileName == kUtf8) {
             if(!fd_write(nextout, "utf8", 4)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -2976,12 +2894,12 @@ BOOL cmd_kanjicode_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinf
         }
         else if(gKanjiCodeFileName == kUtf8Mac) {
             if(!fd_write(nextout, "utf8-mac", 8)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -2995,10 +2913,8 @@ BOOL cmd_kanjicode_file_name(sObject* nextin, sObject* nextout, sRunInfo* runinf
 
 BOOL cmd_mclear_immediately(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(!mis_raw_mode()) {
-        err_msg("invalid terminal setting. not raw mode", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+        err_msg("invalid terminal setting. not raw mode", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
         return FALSE;
     }
 
@@ -3010,8 +2926,6 @@ BOOL cmd_mclear_immediately(sObject* nextin, sObject* nextout, sRunInfo* runinfo
 
 BOOL cmd_adir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
@@ -3020,12 +2934,12 @@ BOOL cmd_adir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         int size = snprintf(buf, 256, "%d", adir());
 
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -3038,8 +2952,6 @@ BOOL cmd_adir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 BOOL cmd_sdir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-
     if(mis_raw_mode() && nextout == gStdout) {
         return TRUE;
     }
@@ -3048,12 +2960,12 @@ BOOL cmd_sdir(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         int size = snprintf(buf, 256, "%d", sdir());
 
         if(!fd_write(nextout, buf, size)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -3068,9 +2980,8 @@ sObject* gMFiler4Prompt;
 
 BOOL cmd_mfiler4_prompt(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
-    sCommand* command = runinfo->mCommand;
-    if(command->mBlocksNum == 1) {
-        gMFiler4Prompt = block_clone_gc(command->mBlocks[0], T_BLOCK, FALSE);
+    if(runinfo->mBlocksNum == 1) {
+        gMFiler4Prompt = block_clone_on_gc(runinfo->mBlocks[0], T_BLOCK, FALSE);
         uobject_put(gMFiler4, "_prompt", gMFiler4Prompt);
         runinfo->mRCode = 0;
     }

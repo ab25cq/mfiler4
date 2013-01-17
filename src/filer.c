@@ -52,7 +52,7 @@ int sKeyCommand_markfun(sObject* self)
     for(i=0; i<KEY_MAX*2; i++) {
         sObject* block = keycommand->mBlocks[i];
         if(block) {
-            block->mFlg |= GC_MARK;
+            SET_MARK(block);
             count ++;
             count+= object_gc_children_mark(block);
         }
@@ -131,13 +131,13 @@ void filer_final()
     for(i=0; i<vector_count(gDirs); i++) {
         sDir_delete(vector_item(gDirs, i));
     }
-    vector_delete_malloc(gDirs);
+    vector_delete_on_malloc(gDirs);
 }
 
 void filer_add_keycommand(int meta, int key, sObject* block, char* fname, BOOL external)
 {
     sKeyCommand* keycommand = SEXTOBJ(gFilerKeyBind).mObject;
-    keycommand->mBlocks[meta*KEY_MAX+key] = block_clone_gc(block, T_BLOCK, TRUE);
+    keycommand->mBlocks[meta*KEY_MAX+key] = block_clone_on_gc(block, T_BLOCK, TRUE);
     keycommand->mExternals[meta*KEY_MAX+key] = external;
 }
 
@@ -174,7 +174,7 @@ BOOL filer_new_dir(char* path, BOOL dotdir_mask, char* mask)
 
         int i;
         for(i=vector_count(dir->mHistory)-1; i!=dir->mHistoryCursor; i--) {
-            string_delete_malloc(vector_item(dir->mHistory, i));
+            string_delete_on_malloc(vector_item(dir->mHistory, i));
             vector_erase(dir->mHistory, i);
         }
         vector_add(dir->mHistory, STRING_NEW_MALLOC(string_c_str(dir->mPath)));
@@ -343,7 +343,7 @@ BOOL filer_add_history(int dir, char* path)
 
     int i;
     for(i=vector_count(dir2->mHistory)-1; i!=dir2->mHistoryCursor; i--) {
-        string_delete_malloc(vector_item(dir2->mHistory, i));
+        string_delete_on_malloc(vector_item(dir2->mHistory, i));
         vector_erase(dir2->mHistory, i);
     }
     vector_add(dir2->mHistory, STRING_NEW_MALLOC(string_c_str(dir2->mPath)));

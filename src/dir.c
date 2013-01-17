@@ -99,11 +99,11 @@ sFile* sFile_new(char* name, char* name_view, char* linkto, struct stat* stat_, 
 
 void sFile_delete(sFile* self) 
 {
-    string_delete_malloc(self->mName);
-    string_delete_malloc(self->mNameView);
-    string_delete_malloc(self->mLinkTo);
-    string_delete_malloc(self->mUser);
-    string_delete_malloc(self->mGroup);
+    string_delete_on_malloc(self->mName);
+    string_delete_on_malloc(self->mNameView);
+    string_delete_on_malloc(self->mLinkTo);
+    string_delete_on_malloc(self->mUser);
+    string_delete_on_malloc(self->mGroup);
 
     FREE(self);
 }
@@ -142,18 +142,18 @@ sDir* sDir_new()
 
 void sDir_delete(sDir* self)
 {
-    string_delete_malloc(self->mPath);
-    string_delete_malloc(self->mMask);
+    string_delete_on_malloc(self->mPath);
+    string_delete_on_malloc(self->mMask);
     int i;
     for(i=0; i<vector_count(self->mFiles); i++) {
         sFile_delete(vector_item(self->mFiles, i));
     }
-    vector_delete_malloc(self->mFiles);
+    vector_delete_on_malloc(self->mFiles);
 
     for(i=0; i<vector_count(self->mHistory); i++) {
-        string_delete_malloc(vector_item(self->mHistory, i));
+        string_delete_on_malloc(vector_item(self->mHistory, i));
     }
-    vector_delete_malloc(self->mHistory);
+    vector_delete_on_malloc(self->mHistory);
     FREE(self);
 }
 
@@ -360,7 +360,7 @@ int sDir_read(sDir* self)
         DIR* dir = opendir(string_c_str(self->mPath));
         if(dir == NULL) {
             string_put(self->mPath, "/");
-            hash_delete_malloc(mark_files);
+            hash_delete_on_malloc(mark_files);
             return sDir_read(self);
         }
         
@@ -430,7 +430,7 @@ int sDir_read(sDir* self)
         
         closedir(dir);
 
-        hash_delete_malloc(mark_files);
+        hash_delete_on_malloc(mark_files);
     }
 
     return 0;

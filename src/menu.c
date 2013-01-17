@@ -37,7 +37,7 @@ static sMenuItem* sMenuItem_new(char* name, int key, sObject* block, BOOL extern
 
     self->mName = STRDUP(name);
     self->mKey = key;
-    self->mBlock = block_clone_gc(block, T_BLOCK, FALSE);
+    self->mBlock = block_clone_on_gc(block, T_BLOCK, FALSE);
     self->mExternal = external;
 
     return self;
@@ -60,7 +60,7 @@ int sMenu_markfun(sObject* self)
     for(i=0; i<vector_count(obj->mMenuItems); i++)
     {
         sMenuItem* item = vector_item(obj->mMenuItems, i);
-        item->mBlock->mFlg |= GC_MARK;
+        SET_MARK(item->mBlock);
         count++;
         count+= object_gc_children_mark(item->mBlock);
     }
@@ -77,7 +77,7 @@ void sMenu_freefun(void* obj)
         sMenuItem_delete(vector_item(self->mMenuItems, i));
     }
 
-    vector_delete_malloc(self->mMenuItems);
+    vector_delete_on_malloc(self->mMenuItems);
 
     FREE(self);
 }
