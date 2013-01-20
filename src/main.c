@@ -538,6 +538,32 @@ static void set_mfenv()
     uobject_put(gMFiler4, "key_underbar", STRING_NEW_GC(buf, TRUE));
 
     snprintf(buf,128, "%d", 0);
+    setenv("nometa", buf, 1);
+    snprintf(buf,128, "%d", 1);
+    setenv("meta", buf, 1);
+    snprintf(buf,128, "%d", A_REVERSE);
+    setenv("ma_reverse", buf, 1);
+    snprintf(buf,128, "%d", A_BOLD);
+    setenv("ma_bold", buf, 1);
+    snprintf(buf,128, "%d", A_UNDERLINE);
+    setenv("ma_underline", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(1));
+    setenv("ma_white", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(2));
+    setenv("ma_blue", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(3));
+    setenv("ma_cyan", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(4));
+    setenv("ma_green", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(5));
+    setenv("ma_yellow", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(6));
+    setenv("ma_magenta", buf, 1);
+    snprintf(buf,128, "%d", COLOR_PAIR(7));
+    setenv("ma_red", buf, 1);
+
+/*
+    snprintf(buf,128, "%d", 0);
     uobject_put(gMFiler4, "nometa", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 1);
     uobject_put(gMFiler4, "meta", STRING_NEW_GC(buf, TRUE));
@@ -561,6 +587,7 @@ static void set_mfenv()
     uobject_put(gMFiler4, "ma_magenta", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", COLOR_PAIR(7));
     uobject_put(gMFiler4, "ma_red", STRING_NEW_GC(buf, TRUE));
+*/
 }
 
 void mygetcwd(char* result, int result_size)

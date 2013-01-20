@@ -101,22 +101,22 @@ def toggle_nameonly_mode (
 
 # color ####################
 print 0 | var COLOR
-ma_bold | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK)
+export ma_bold | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK)
 
 def toggle_color (
     if(COLOR |chomp| = 0) (
         if (export HAS_COLOR | = 1\n) (
             print 1 | var COLOR
 
-            ma_cyan | export COLOR_DIR
-            ma_green | export COLOR_EXE
-            ma_magenta | export COLOR_LINK
-            ma_yellow | export COLOR_MARK
+            export ma_cyan | export COLOR_DIR
+            export ma_green | export COLOR_EXE
+            export ma_magenta | export COLOR_LINK
+            export ma_yellow | export COLOR_MARK
         )
     ) else (
         print 0 | var COLOR
 
-        ma_bold | (| export COLOR_DIR; | export COLOR_EXE; | export COLOR_MARK; | export COLOR_LINK)
+        export ma_bold | (| export COLOR_DIR; | export COLOR_EXE; | export COLOR_MARK; | export COLOR_LINK)
     )
 )
 
@@ -207,10 +207,10 @@ addmenu view 'file (S)ize view way Plane' $key_S (
 addmenu view 'toggle adding star to e(X)e file' $key_X (
     if(export VIEW_ADD_STAR_EXE| chomp | = 0) ( 
         print 1 | export VIEW_ADD_STAR_EXE
-        ma_red | export COLOR_EXE; 
+        export ma_red | export COLOR_EXE; 
     ) else ( 
         print 0 | export VIEW_ADD_STAR_EXE
-        ma_white | export COLOR_EXE 
+        export ma_white | export COLOR_EXE 
     )
 )
 
