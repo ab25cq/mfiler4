@@ -626,9 +626,9 @@ void mclear_lastline()
 
 void xclear()
 {
-#ifndef __CYGWIN__
-#define __CYGWIN__
-#endif
+//#ifndef __CYGWIN__
+//#define __CYGWIN__
+//#endif
 #if defined(__CYGWIN__)
     int y;
     for(y=0; y<mgetmaxy()-1; y++) {

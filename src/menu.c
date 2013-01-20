@@ -332,6 +332,8 @@ void menu_input(int meta, int key)
             }
         }
     }
+
+    set_signal_mfiler();
 }
 
 ///////////////////////////////////////////////////

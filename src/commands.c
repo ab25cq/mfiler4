@@ -798,6 +798,8 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     def_prog_mode();
     endwin();
 
+    mreset_tty();
+
     int rcode;
 
     if(continue_) {
@@ -817,7 +819,11 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     }
 
     if(rcode != 0 || !quick) {
-        printf("\x1b[7mHIT ANY KEY\x1b[0m", 27, 27);
+#ifdef __CYGWIN__
+        printf("\x1b[7mHIT ANY KEY\x1b[0m\r\n", 27, 27);
+#else
+        printf("\x1b[7mHIT ANY KEY\x1b[0m\n", 27, 27);
+#endif
     }
 
     //xinitscr();
@@ -826,6 +832,8 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     if(rcode != 0 || !quick) {
         (void)getch();
     }
+
+    set_signal_mfiler();
 }
 
 BOOL cmd_cmdline(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
@@ -2919,6 +2927,9 @@ BOOL cmd_mclear_immediately(sObject* nextin, sObject* nextout, sRunInfo* runinfo
     }
 
     xclear_immediately();
+    view();
+    refresh();
+
     runinfo->mRCode = 0;
 
     return TRUE;

@@ -929,6 +929,8 @@ void filer_input(int meta, int key)
             ISearchClear();
         }
     }
+
+    set_signal_mfiler();
 }
 
 ///////////////////////////////////////////////////
@@ -1794,12 +1796,14 @@ void filer_view(int dir)
                         , vector_count(self->mFiles)-1, size, p);
             }
             else {
-                const int cur_page = self->mCursor/filer_line_max(adir()) + 1;
-                const int max_page = vector_count(self->mFiles)/filer_line_max(adir()) + 1;
+                if(filer_line_max(adir()) > 0) {
+                    const int cur_page = self->mCursor/filer_line_max(adir()) + 1;
+                    const int max_page = vector_count(self->mFiles)/filer_line_max(adir()) + 1;
 
-                mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
-                        , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
-                        , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                    mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
+                            , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
+                            , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                }
             }
        }
     }
@@ -1924,12 +1928,14 @@ void filer_view(int dir)
                         , filer_mark_file_num(dir), vector_count(self->mFiles)-1, size, p);
             }
             else {
-                const int cur_page = self->mCursor/(filer_line_max(adir())*2) + 1;
-                const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())*2) + 1;
+                if(filer_line_max(adir()) > 0) {
+                    const int cur_page = self->mCursor/(filer_line_max(adir())*2) + 1;
+                    const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())*2) + 1;
 
-                mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
-                      , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
-                      , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                    mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
+                          , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
+                          , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                }
             }
         }
     }
@@ -2053,12 +2059,14 @@ void filer_view(int dir)
                         , "(%d/%d)-%sbytes-(%3d%%)", filer_mark_file_num(dir), vector_count(self->mFiles)-1, size, p);
             }
             else {
-                const int cur_page = self->mCursor/(filer_line_max(adir())*3) + 1;
-                const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())*3) + 1;
+                if(filer_line_max(adir()) > 0) {
+                    const int cur_page = self->mCursor/(filer_line_max(adir())*3) + 1;
+                    const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())*3) + 1;
 
-                mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
-                        , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
-                        , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                    mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
+                            , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
+                            , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                }
             }
         }
     }
@@ -2180,12 +2188,14 @@ void filer_view(int dir)
                         , "(%d/%d)-%sbytes-(%3d%%)", filer_mark_file_num(dir), vector_count(self->mFiles)-1, size, p);
             }
             else {
-                const int cur_page = self->mCursor/(filer_line_max(adir())*5) + 1;
-                const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())*5) + 1;
+                if(filer_line_max(adir()) > 0) {
+                    const int cur_page = self->mCursor/(filer_line_max(adir())*5) + 1;
+                    const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())*5) + 1;
 
-                mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
-                        , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
-                        , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                    mvprintw(maxy - kMaxYMinus+1-jobs_exist, 2
+                            , "(%d/%d)-%sbytes-(%d/%d)", filer_mark_file_num(dir)
+                            , vector_count(self->mFiles)-1, size, cur_page, max_page);
+                }
             }
         }
     }
@@ -2323,10 +2333,12 @@ void filer_view(int dir)
                 printw("-(%3d%%)", p);
             }
             else {
-                const int cur_page = self->mCursor/filer_line_max(adir()) + 1;
-                const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())) + 1;
+                if(filer_line_max(adir()) > 0) {
+                    const int cur_page = self->mCursor/filer_line_max(adir()) + 1;
+                    const int max_page = vector_count(self->mFiles)/(filer_line_max(adir())) + 1;
 
-                printw("-(%d/%d)", cur_page, max_page);
+                    printw("-(%d/%d)", cur_page, max_page);
+                }
             }
         }
     }
@@ -2421,13 +2433,15 @@ void cmdline_view_filer()
         }
     }
 
-    mvprintw(maxy-2, 0, SFD(nextout).mBuf);
+    char buf[1024];
+    str_cut(gKanjiCode, SFD(nextout).mBuf, maxx, buf, 1024);
+    mvprintw(maxy-2, 0, buf);
+    //mvprintw(maxy-2, 0, SFD(nextout).mBuf);
 
     (void)vector_pop_back(gStackFrames);
     stack_end_stack();
 
     /// カーソル下のファイルの情報を描写 ///          
-    char buf[1024];
     sFile* file = filer_cursor_file(adir());
 
     char permission[12];

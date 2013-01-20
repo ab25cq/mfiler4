@@ -101,22 +101,22 @@ def toggle_nameonly_mode (
 
 # color ####################
 print 0 | var COLOR
-export ma_bold | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK)
+ma_bold | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK)
 
 def toggle_color (
     if(COLOR |chomp| = 0) (
         if (export HAS_COLOR | = 1\n) (
             print 1 | var COLOR
 
-            export ma_cyan | export COLOR_DIR
-            export ma_green | export COLOR_EXE
-            export ma_magenta | export COLOR_LINK
-            export ma_yellow | export COLOR_MARK
+            ma_cyan | export COLOR_DIR
+            ma_green | export COLOR_EXE
+            ma_magenta | export COLOR_LINK
+            ma_yellow | export COLOR_MARK
         )
     ) else (
         print 0 | var COLOR
 
-        export ma_bold | (| export COLOR_DIR; | export COLOR_EXE; | export COLOR_MARK; | export COLOR_LINK)
+        ma_bold | (| export COLOR_DIR; | export COLOR_EXE; | export COLOR_MARK; | export COLOR_LINK)
     )
 )
 
@@ -207,10 +207,10 @@ addmenu view 'file (S)ize view way Plane' $key_S (
 addmenu view 'toggle adding star to e(X)e file' $key_X (
     if(export VIEW_ADD_STAR_EXE| chomp | = 0) ( 
         print 1 | export VIEW_ADD_STAR_EXE
-        export ma_red | export COLOR_EXE; 
+        ma_red | export COLOR_EXE; 
     ) else ( 
         print 0 | export VIEW_ADD_STAR_EXE
-        export ma_white | export COLOR_EXE 
+        ma_white | export COLOR_EXE 
     )
 )
 
@@ -383,7 +383,7 @@ keycommand $key_ctrl_b    ( if(export VIEW_OPTION |chomp| = 2pain)( activate 0 )
 keycommand $key_right     ( if(export VIEW_OPTION |chomp| = 2pain)( activate 1 ) else ( scroll_right ) )
 keycommand $key_ctrl_f    ( if(export VIEW_OPTION |chomp| = 2pain)( activate 1 ) else ( scroll_right ) )
 
-keycommand $key_ctrl_l    ( mclear_immediately; reread -d 0; reread -d 1 )
+keycommand $key_ctrl_l ( mclear_immediately; reread -d 0; reread -d 1 )
 
 keycommand $key_x ( 
     cursor | chomp | if( | -x) (
@@ -443,7 +443,8 @@ keycommand $key_dot (
 
 # save mfiler4 stat on exit
 def save_mfiler4_stat (
-    ( export VIEW_SIZE VIEW_OPTION VIEW_MTIME VIEW_OWNER VIEW_GROUP VIEW_NLINK VIEW_PERMISSION VIEW_DIVIDE_EXTENSION VIEW_FOCUSBACK VIEW_PAGE VIEW_FILE_SIZE VIEW_ADD_STAR_EXE
+    (export VIEW_SIZE VIEW_OPTION VIEW_MTIME VIEW_OWNER VIEW_GROUP VIEW_NLINK VIEW_PERMISSION VIEW_DIVIDE_EXTENSION VIEW_FOCUSBACK VIEW_PAGE VIEW_FILE_SIZE VIEW_ADD_STAR_EXE
+
         export COLOR_DIR COLOR_EXE COLOR_LINK COLOR_MARK
         export SORT_KIND SORT_DIR_UP SORT_MARK_UP
 
@@ -456,6 +457,7 @@ def save_mfiler4_stat (
         mask -d 1 -dotdir
 
         dir_num 
+
 
         print 2 | var -local I
         while(I | -lt $(dir_num|chomp)) (
@@ -1605,6 +1607,8 @@ file system encode setting
 -w UTF8
 EOS | help::set_helps
 )
+
+compl::run( root::object mfiler4 )
 
 completion mfiler4::help (
     mfiler4::self | egrep native\ function\$ | root::scan '(^.+?):' | each ( | chomp | quote | pomch )
