@@ -793,10 +793,17 @@ BOOL cmd_isearch(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
 static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
 {
-    //endwin();
-    //mreset_tty();
     def_prog_mode();
     endwin();
+
+/*
+    int maxy = mgetmaxy();
+
+    mclear_online(maxy-1);
+    mclear_online(maxy);
+    move(maxy-1, 0);
+    refresh();
+*/
 
     mreset_tty();
 
@@ -818,19 +825,27 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
         (void)filer_reset_marks(adir());
     }
 
-    if(rcode != 0 || !quick) {
-#ifdef __CYGWIN__
-        printf("\x1b[7mHIT ANY KEY\x1b[0m\r\n", 27, 27);
-#else
-        printf("\x1b[7mHIT ANY KEY\x1b[0m\n", 27, 27);
-#endif
+    /// EOF ///
+    if(rcode == -2) {
+        printf("\x1b[2K");
+        //printf("\x1b[1B\x1b[2K");
+        reset_prog_mode();
     }
+    /// an error occures or no quick ///
+    else if(rcode != 0 || !quick) {
+#ifdef __CYGWIN__
+        printf("\x1b[7mHIT ANY KEY\x1b[0m\r\n\x1b[1A");
+#else
+        printf("\x1b[7mHIT ANY KEY\x1b[0m\n\x1b[1A");
+#endif
+        reset_prog_mode();
 
-    //xinitscr();
-    reset_prog_mode();
-
-    if(rcode != 0 || !quick) {
+        xinitscr();
         (void)getch();
+    }
+    /// quick ///
+    else {
+        reset_prog_mode();
     }
 
     set_signal_mfiler();

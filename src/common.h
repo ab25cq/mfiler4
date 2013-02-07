@@ -38,6 +38,12 @@
 
 #define S_IXUGO (S_IXOTH | S_IXGRP | S_IXUSR)
 
+#if defined(__x86_64__) && !defined(__DARWIN__)
+#define FORMAT_HARDLINK "%3ld"
+#else
+#define FORMAT_HARDLINK "%3d"
+#endif
+
 //////////////////////////////////////////////
 // main.c
 ///////////////////////////////////////////////

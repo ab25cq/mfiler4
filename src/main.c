@@ -210,11 +210,6 @@ static void version()
     puts("This program is a 2pain file manager with a embedded shell scripting system \"xyzsh\". mfiler4 is developped by ab25cq.");
     puts("compiled with");
 
-#if defined(HAVE_MIGEMO_H)
-    puts("+migemo");
-#else
-    puts("-migemo");
-#endif
     puts("+oniguruma");
     puts("+xyzsh");
     puts("+math");
@@ -234,7 +229,7 @@ static void set_mfenv()
 
     setenv("MF4HOME", gHomeDir, 1);
     setenv("MF4TEMP", gTempDir, 1);
-    setenv("DATADIR", DATAROOTDIR, 1);
+    setenv("DOCDIR", DOCDIR, 1);
     setenv("DOTDIR_MASK", "0", 1);
 
     char buf[128];
@@ -541,12 +536,21 @@ static void set_mfenv()
     setenv("nometa", buf, 1);
     snprintf(buf,128, "%d", 1);
     setenv("meta", buf, 1);
+#if !defined(__DARWIN__)
+    snprintf(buf,128, "%ld", A_REVERSE);
+    setenv("ma_reverse", buf, 1);
+    snprintf(buf,128, "%ld", A_BOLD);
+    setenv("ma_bold", buf, 1);
+    snprintf(buf,128, "%ld", A_UNDERLINE);
+    setenv("ma_underline", buf, 1);
+#else
     snprintf(buf,128, "%d", A_REVERSE);
     setenv("ma_reverse", buf, 1);
     snprintf(buf,128, "%d", A_BOLD);
     setenv("ma_bold", buf, 1);
     snprintf(buf,128, "%d", A_UNDERLINE);
     setenv("ma_underline", buf, 1);
+#endif
     snprintf(buf,128, "%d", COLOR_PAIR(1));
     setenv("ma_white", buf, 1);
     snprintf(buf,128, "%d", COLOR_PAIR(2));
@@ -630,8 +634,9 @@ int main(int argc, char* argv[])
     CHECKML_BEGIN(FALSE);    // start to watch memory leak
 
     /// initialization for envronment variable ///
-    setenv("VERSION", "1.1.1", 1);
-    setenv("MFILER4_DATAROOTDIR", DATAROOTDIR, 1);
+    setenv("VERSION", "1.1.2", 1);
+    setenv("MFILER4_DOCDIR", DOCDIR, 1);
+    setenv("MFILER4_DATAROOTDIR", DOCDIR, 1);
 
     /// save mfiler4 home directory ///
     char* home = getenv("HOME");

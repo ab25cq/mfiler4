@@ -1,18 +1,13 @@
 
 ##########################################################################
-# 環境変数
+# variables
 ###########################################################################
 CC=@CC@
 INSTALL=@INSTALL@
 CFLAGS=@CFLAGS@ -Werror
 LIBS=@LIBS@
-SYSTEM_MIGEMODIR=@SYSTEM_MIGEMODIR@
 OBJ=src/filer.o src/file.o src/isearch.o src/menu.o src/gui.o src/commands.o src/dir.o
 DESTDIR=
-
-###########################################################################
-# インストールするディレクトリ位置
-###########################################################################
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -31,28 +26,31 @@ docdir=@datadir@/doc/mfiler4
 all: mfiler4 mattr
 	rm -f install
 
-clean:
-	rm -f mfiler4 src/*.o mattr mattr.exe mfiler4.exe mfiler4.exe.stackdump config.log config.status
-
-distclean:
-	rm -rf mfiler4 src/*.o src/config.h Makefile mattr mattr.exe mfiler4.exe config.log config.status mfiler4.dSYM/
-
-mfiler4: src/config.h src/main.c $(LIBMIGEMO) $(LIBONIG) $(OBJ)
-	$(CC) -o mfiler4 src/main.c -DDOCDIR=\"$(docdir)\" $(OBJ) $(LIBS) $(CFLAGS)
+mfiler4: src/config.h src/main.c $(LIBONIG) $(OBJ)
+	$(CC) -o mfiler4 src/main.c $(OBJ) $(LIBS) $(CFLAGS)
 
 mattr: src/mattr.c
 	$(CC) -o mattr src/mattr.c -lcurses
 
-src/isearch.o: src/isearch.c
-	$(CC) -o src/isearch.o -c src/isearch.c  $(CFLAGS) -DSYSTEM_MIGEMODIR=\"$(SYSTEM_MIGEMODIR)\"
+###########################################################################
+# clean
+###########################################################################
+clean:
+	rm -rf mfiler4 src/*.o mattr mattr.exe mfiler4.exe mfiler4.exe.stackdump config.log config.status autom4te.cache .DS_Store
 
+distclean:
+	rm -rf mfiler4 src/*.o src/config.h Makefile mattr mattr.exe mfiler4.exe mfiler4.exe.stackdump config.log config.status mfiler4.dSYM/ autom4te.cache .DS_Store
+
+###########################################################################
+# permission
+###########################################################################
 permission:
 	chmod 644 *
 	chmod 755 .git man src configure
 	chmod 644 src/*.c src/*.h
 
 ##########################################################################
-# インストール
+# install
 ##########################################################################
 install:
 	if [ -z "$(DESTDIR)" ]; then make normal-install; else make dest-install; fi
@@ -91,3 +89,19 @@ dest-install:
 	install -s -m 755 mattr $(DESTDIR)/$(bindir)
 	install -m 644 man/man1/mfiler4.1 "$(DESTDIR)/$(mandir)/man1"
 
+##########################################################################
+# uninstall
+##########################################################################
+uninstall:
+	rm -f $(docdir)/USAGE.ja.txt
+	rm -f $(docdir)/USAGE.txt
+	rm -f $(docdir)/README.ja
+	rm -f $(docdir)/README
+	rm -f $(docdir)/CHANGELOG
+	rmdir $(docdir)
+	rm -f $(sysconfdir)/mfiler4.xyzsh
+	rmdir $(sysconfdir)
+	rm -f $(bindir)/mfiler4
+	rm -f $(bindir)/mattr;
+	rm -f $(bindir)/mattr
+	rm -f $(mandir)/man1/mfiler4.1

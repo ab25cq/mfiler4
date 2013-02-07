@@ -604,7 +604,6 @@ LIBOBJS
 EGREP
 GREP
 CPP
-SYSTEM_MIGEMODIR
 INSTALL_DATA
 INSTALL_SCRIPT
 INSTALL_PROGRAM
@@ -659,11 +658,9 @@ enable_option_checking
 with_debug
 with_gprof_debug
 with_optimize
-with_migemo
-with_migemo_dir
 with_onig_dir
+with_migemo
 with_xyzsh_dir
-with_system_migemodir
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1285,11 +1282,9 @@ Optional Packages:
   --with-debug              include debug info
   --with-gprof-debug        include debug info
   --with-optimize           with optimize flag(-O2) CFLAGS
-  --with-migemo             enable migemo
-  --with-migemo-dir=DIR     set migemo directory
   --with-onig-dir=DIR       set oniguruma directory
+  --with-migemo             for cygwin option.
   --with-xyzsh-dir=DIR    set xyzsh directory
- --with-system-migemodir       specify the directory of system migemo dictionary. /usr/share/migemo, for example
 
 Some influential environment variables:
   CC          C compiler command
@@ -2963,27 +2958,19 @@ else
 fi
 
 
-# Check whether --with-migemo was given.
-if test "${with_migemo+set}" = set; then :
-  withval=$with_migemo;  ENABLE_MIGEMO=1
-else
-   ENABLE_MIGEMO=0
-fi
-
-
-# Check whether --with-migemo-dir was given.
-if test "${with_migemo_dir+set}" = set; then :
-  withval=$with_migemo_dir;  MIGEMO_DIR="$with_val"
-else
-   MIGEMO_DIR=
-fi
-
-
 # Check whether --with-onig-dir was given.
 if test "${with_onig_dir+set}" = set; then :
   withval=$with_onig_dir;  ONIG_DIR="$with_val"
 else
    ONIG_DIR=
+fi
+
+
+# Check whether --with-migemo was given.
+if test "${with_migemo+set}" = set; then :
+  withval=$with_migemo;  ENABLE_MIGEMO=1
+else
+   ENABLE_MIGEMO=0
 fi
 
 
@@ -2995,25 +2982,16 @@ else
 fi
 
 
-# Check whether --with-system-migemodir was given.
-if test "${with_system_migemodir+set}" = set; then :
-  withval=$with_system_migemodir;  if test -n "$withval" && test -n $LIBMIGEMO ; then echo "system-migemodir = $withval" ; SYSTEM_MIGEMODIR="$withval" ; { cat >>confdefs.h <<_ACEOF
-#define SYSTEM_MIGEMODIR "$withval"
-_ACEOF
- } ; fi
-else
-   if test -e /usr/local/share/migemo; then SYSTEM_MIGEMODIR=/usr/local/share/migemo; else SYSTEM_MIGEMODIR=/usr/share/cmigemo; fi
-fi
-
+CFLAGS='-DSYSCONFDIR="\"${sysconfdir}/\"" -DDOCDIR="\"${docdir}/\""'
 
 if test $DEBUGGING = 1
 then
-    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -DMDEBUG"
+    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -DMDEBUG $CFLAGS"
 elif test $DEBUGGING = 2
 then
-    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -pg -DMDEBUG "
+    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -pg -DMDEBUG  $CFLAGS"
 else
-    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I ."
+    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . $CFLAGS"
 fi
 
 if test -d /usr/local/include
@@ -3047,16 +3025,6 @@ then
     fi
 fi
 
-if test -n "$MIGEMO_DIR"
-then
-    if test -e "$MIGEMO_DIR/include/migemo.h" && test -e "$MIGEMO_DIR/lib/libmigemo.so"
-    then
-        CFLAGS="$CFLAGS -I$MIGEMO_DIR/include -L$MIGEMO_DIR/lib"
-    else
-        echo "can't found migemo.h in $MIGEMO_DIR/include or libmigemo.so in $MIGEMO_DIR/lib"
-    fi
-fi
-
 if test -n "$XYZSH_DIR"
 then
     if test -e "$XYZSH_DIR/include/xyzsh/xyzsh.h" && test -e "$XYZSH_DIR/lib/libxyzsh.so"
@@ -3071,9 +3039,6 @@ if test $ENABLE_OPTIMIZE = 1
 then
     CFLAGS="$CFLAGS -O3"
 fi
-
-CFLAGS="-DSYSCONFDIR=\"\\\"$sysconfdir/mfiler4/\\\"\" -DDATAROOTDIR=\"\\\"$datarootdir/doc/mfiler4/\\\"\" -DSYSTEM_MIGEMODIR=\"\\\"$SYSTEM_MIGEMODIR\\\"\" $CFLAGS"
-
 
 
 
@@ -3777,6 +3742,24 @@ fi
 
 
 
+##########################################################################
+# migemo for cygwin
+##########################################################################
+if test $ENABLE_MIGEMO = 1
+then
+    if test "$OS" = CYGWIN
+    then
+        ac_fn_c_check_header_mongrel "$LINENO" "migemo.h" "ac_cv_header_migemo_h" "$ac_includes_default"
+if test "x$ac_cv_header_migemo_h" = xyes; then :
+  LIBS="$LIBS -lmigemo"
+else
+   exit
+fi
+
+
+    fi
+fi
+
 ####################################################################
 # iconv settings
 ####################################################################
@@ -3793,22 +3776,6 @@ fi
 if test "$OS" = CYGWIN|| test "$OS" = DARWIN || test "$OS" = FREEBSD
 then
     LIBS="$LIBS -liconv"
-fi
-
-##########################################################################
-# migemo
-###########################################################################
-if test $ENABLE_MIGEMO = 1
-then
-    ac_fn_c_check_header_mongrel "$LINENO" "migemo.h" "ac_cv_header_migemo_h" "$ac_includes_default"
-if test "x$ac_cv_header_migemo_h" = xyes; then :
-  LIBS="$LIBS -lmigemo"; $as_echo "#define HAVE_MIGEMO_H 1" >>confdefs.h
-
-else
-   exit
-fi
-
-
 fi
 
 

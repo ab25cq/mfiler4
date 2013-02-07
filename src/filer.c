@@ -896,7 +896,6 @@ void filer_input(int meta, int key)
                     printf("\nHIT ANY KEY\n");
 
                     xinitscr();
-
                     (void)getch();
                 }
             }
@@ -906,7 +905,6 @@ void filer_input(int meta, int key)
                 printf("\nHIT ANY KEY\n");
 
                 xinitscr();
-
                 (void)getch();
             }
         }
@@ -1438,7 +1436,7 @@ static void make_file_stat(sFile* file, char* buf, int buf_size)
 
     char* env_nlink = getenv("VIEW_NLINK");
     if(env_nlink && strcmp(env_nlink, "1") == 0) {
-        snprintf(buf + strlen(buf), buf_size -strlen(buf), " %3d", file->mStat.st_nlink);
+        snprintf(buf + strlen(buf), buf_size -strlen(buf), " "FORMAT_HARDLINK, file->mStat.st_nlink);
     }
 
     char* env_owner = getenv("VIEW_OWNER");
@@ -2518,7 +2516,8 @@ void cmdline_view_filer()
         while(year > 100) year-=100;
         
         snprintf(buf2, 1024, 
-            "%s %3d %-8s %-7s%s %02d-%02d-%02d %02d:%02d %s"
+            "%s "FORMAT_HARDLINK" %-8s %-7s%s %02d-%02d-%02d %02d:%02d %s"
+            //"%s %3d %-8s %-7s%s %02d-%02d-%02d %02d:%02d %s"
             //, "%s %3d %-8s %-7s%10lld %02d-%02d-%02d %02d:%02d %s"
             , permission, file->mLStat.st_nlink
             , owner, group
@@ -2536,7 +2535,8 @@ void cmdline_view_filer()
     }
     else {
         snprintf(buf, 1024,
-           "%s %3d %s%s%s %02d-%02d-%02d %02d:%02d %s -> %s"
+           "%s "FORMAT_HARDLINK" %s%s%s %02d-%02d-%02d %02d:%02d %s -> %s"
+           //"%s %3d %s%s%s %02d-%02d-%02d %02d:%02d %s -> %s"
            //, "%s %3d %s%s%10lld %02d-%02d-%02d %02d:%02d %s -> %s"
            , permission, file->mLStat.st_nlink
            , owner, group

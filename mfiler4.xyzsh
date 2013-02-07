@@ -468,6 +468,9 @@ def save_mfiler4_stat (
             ++ I
         )
 
+        if(defined migemo_file_completion) ( print migemo_completion\n ) else ( print nomigemo_completion\n)
+        if(defined migemo::match) ( print migemo\n ) else ( print nomigemo \n )
+
     ) > $MF4HOME/stat
 )
 
@@ -507,13 +510,33 @@ def load_mfiler4_stat (
             ++ I
         )
 
+        if(|1 print |>) (
+            |> print | root::run (
+                if(|strip |= migemo_completion) ( print 1 | var MIGEMO_COMPLETION_AUTO_LOAD) else ( print 0 | var MIGEMO_COMPLETION_AUTO_LOAD )
+            )
+            |1 if(|strip | = migemo) ( load -dynamic-library migemo.so )
+        ) else (
+            if(readline "Do you want to load migemo which is for Japanse ROMAJI Incremental Search ?(y/n)" | =~ ^y) (
+                load -dynamic-library migemo.so
+            )
+        )
+
         reread -d all
+    )
+)
+
+# initialize mfiler4 stat 
+def init_mfiler4_stat (
+    if(readline "Do you use Migemo which is for Japanese Romaji Incremental Search? (y/n)" | chomp | =~ -ignore-case ^y) (
+        load -dynamic-library migemo.so
     )
 )
 
 if(print $MF4HOME/stat | -e) (
     load_mfiler4_stat
-) 
+) else (
+    init_mfiler4_stat
+)
 
 def quit -inherit (
     mfiler4::save_mfiler4_stat
@@ -1086,6 +1109,78 @@ def quit -inherit (
     inherit
 )
 
+mfiler4::run (
+    def isearch_match_next (
+        if(defined migemo::match) (
+            ARGV | var -local I InputFileName
+
+            while(I | -lt $(file_num|chomp)) (
+                if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
+                    cursor_move $I
+                    return 0
+                ) else (
+                    if(file_name $I |chomp| migemo::match -quiet $InputFileName) (
+                        cursor_move $I
+                        return 0
+                    )
+                )
+
+                ++ I
+            )
+
+            return 1
+        ) else (
+            ARGV | var -local I InputFileName
+
+            while(I | -lt $(file_num|chomp)) (
+                if(file_name $I |chomp| index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                    cursor_move $I
+                    return 0
+                )
+
+                ++ I
+            )
+
+            return 1
+        )
+    )
+
+    def isearch_match_back (
+        if(defined migemo::match) (
+            ARGV | var -local I InputFileName
+
+            while(I | -ge 0) (
+                if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
+                    cursor_move $I
+                    return 0
+                ) else (
+                    if(file_name $I | migemo::match $InputFileName -quiet) (
+                        cursor_move $I
+                        return 0
+                    )
+                )
+
+                -- I
+            )
+
+            return 1
+        ) else (
+            ARGV | var -local I InputFileName
+
+            while(I | -ge 0) (
+                if(file_name $I | index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                    cursor_move $I
+                    return 0
+                )
+
+                -- I
+            )
+
+            return 1
+        )
+    )
+)
+
 ### help ###
 mfiler4::run(
     object help ( 
@@ -1097,7 +1192,7 @@ mfiler4::run(
                 if(ary -size ARGV |= 0\n) (
                     if(funinfo | egrep -q '^current object: help<-mfiler4<-root$') (
                         print "-+- マニュアル -+-" \n \n
-                        cat $MFILER4_DATAROOTDIR/USAGE.ja.txt
+                        cat $MFILER4_DOCDIR/USAGE.ja.txt
                         print "-+- コマンド -+-" \n \n
                         hash -La HELPS.ja| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
                     ) else (
@@ -1112,7 +1207,7 @@ mfiler4::run(
             ) else (
                 ary -size ARGV | if(| = 0\n ) (
                     if(funinfo | egrep -q '^current object: help<-mfiler4<-root$') (
-                        cat $MFILER4_DATAROOTDIR/USAGE.txt
+                        cat $MFILER4_DOCDIR/USAGE.txt
                         hash -La HELPS| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
                     ) else (
                         hash -La HELPS| each -La -number 2 ( | lines -La 1 (|chomp|add \n\n) )
