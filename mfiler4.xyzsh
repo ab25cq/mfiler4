@@ -14,7 +14,11 @@ if(export MF4HOME |chomp| -d) (
 print $MF4HOME/trashbox/ | export TRASHBOX_DIR # when pressing d, you can move files to this directory
 
 mfiler4::prompt (
-    print "mfiler4 $VERSION with xyzsh $XYZSH_VERSION (c)ab25cq 2004-2013 hit <?> for help"
+    if(defined migemo::match) (
+        print "mfiler4 $VERSION with xyzsh $XYZSH_VERSION migemo (c)ab25cq 2004-2013 hit <?> for help"
+    ) else (
+        print "mfiler4 $VERSION with xyzsh $XYZSH_VERSION (c)ab25cq 2004-2013 hit <?> for help"
+    )
 )
 
 ### file name ecode settings ###
@@ -1110,73 +1114,145 @@ def quit -inherit (
 )
 
 mfiler4::run (
-    def isearch_match_next (
-        if(defined migemo::match) (
-            ARGV | var -local I InputFileName
+    if(uname | = Darwin\n) (
+        def isearch_match_next (
+            if(defined migemo::match) (
+                ARGV | var -local I InputFileName
 
-            while(I | -lt $(file_num|chomp)) (
-                if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
-                    cursor_move $I
-                    return 0
-                ) else (
-                    if(file_name $I |chomp| migemo::match -quiet $InputFileName) (
+                while(I | -lt $(file_num|chomp)) (
+                    if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
+                        cursor_move $I
+                        return 0
+                    ) else (
+                        if(file_name $I |chomp| sys::iconv -f UTF-8-MAC -t UTF-8 | migemo::match -quiet $InputFileName) (
+                            cursor_move $I
+                            return 0
+                        )
+                    )
+
+                    ++ I
+                )
+
+                return 1
+            ) else (
+                ARGV | var -local I InputFileName
+
+                while(I | -lt $(file_num|chomp)) (
+                    if(file_name $I |chomp| index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
                         cursor_move $I
                         return 0
                     )
+
+                    ++ I
                 )
 
-                ++ I
+                return 1
             )
-
-            return 1
-        ) else (
-            ARGV | var -local I InputFileName
-
-            while(I | -lt $(file_num|chomp)) (
-                if(file_name $I |chomp| index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
-                    cursor_move $I
-                    return 0
-                )
-
-                ++ I
-            )
-
-            return 1
         )
-    )
 
-    def isearch_match_back (
-        if(defined migemo::match) (
-            ARGV | var -local I InputFileName
+        def isearch_match_back (
+            if(defined migemo::match) (
+                ARGV | var -local I InputFileName
 
-            while(I | -ge 0) (
-                if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
-                    cursor_move $I
-                    return 0
-                ) else (
-                    if(file_name $I | migemo::match $InputFileName -quiet) (
+                while(I | -ge 0) (
+                    if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
+                        cursor_move $I
+                        return 0
+                    ) else (
+                        if(file_name $I | sys::iconv -f UTF-8-MAC -t UTF-8 | migemo::match $InputFileName -quiet) (
+                            cursor_move $I
+                            return 0
+                        )
+                    )
+
+                    -- I
+                )
+
+                return 1
+            ) else (
+                ARGV | var -local I InputFileName
+
+                while(I | -ge 0) (
+                    if(file_name $I | index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
                         cursor_move $I
                         return 0
                     )
+
+                    -- I
                 )
 
-                -- I
+                return 1
             )
+        )
+    ) else (
+        def isearch_match_next (
+            if(defined migemo::match) (
+                ARGV | var -local I InputFileName
 
-            return 1
-        ) else (
-            ARGV | var -local I InputFileName
+                while(I | -lt $(file_num|chomp)) (
+                    if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
+                        cursor_move $I
+                        return 0
+                    ) else (
+                        if(file_name $I |chomp| migemo::match -quiet $InputFileName) (
+                            cursor_move $I
+                            return 0
+                        )
+                    )
 
-            while(I | -ge 0) (
-                if(file_name $I | index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
-                    cursor_move $I
-                    return 0
+                    ++ I
                 )
 
-                -- I
-            )
+                return 1
+            ) else (
+                ARGV | var -local I InputFileName
 
-            return 1
+                while(I | -lt $(file_num|chomp)) (
+                    if(file_name $I |chomp| index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                        cursor_move $I
+                        return 0
+                    )
+
+                    ++ I
+                )
+
+                return 1
+            )
+        )
+
+        def isearch_match_back (
+            if(defined migemo::match) (
+                ARGV | var -local I InputFileName
+
+                while(I | -ge 0) (
+                    if(file_name $I | chomp | index -byte -ignore-case $InputFileName | lines 0 | = 0\n) (
+                        cursor_move $I
+                        return 0
+                    ) else (
+                        if(file_name $I | migemo::match $InputFileName -quiet) (
+                            cursor_move $I
+                            return 0
+                        )
+                    )
+
+                    -- I
+                )
+
+                return 1
+            ) else (
+                ARGV | var -local I InputFileName
+
+                while(I | -ge 0) (
+                    if(file_name $I | index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                        cursor_move $I
+                        return 0
+                    )
+
+                    -- I
+                )
+
+                return 1
+            )
         )
     )
 )
@@ -1707,6 +1783,22 @@ compl::run( root::object mfiler4 )
 
 completion mfiler4::help (
     mfiler4::self | egrep native\ function\$ | root::scan '(^.+?):' | each ( | chomp | quote | pomch )
-    hash COMPLETION_OPTIONS -key help
+    hash mfiler4::COMPLETION_OPTIONS -key help
+)
+
+completion mfiler4::__all__ (
+    ARGV | var -local Program
+
+    | file_completion
+
+    hash mfiler4::COMPLETION_OPTIONS -key $Program
+)
+
+print ""\n"" | hash COMPLETION_OPTIONS
+
+mfiler4 | egrep ': native function$' | egrep -v '^run: native function$|^show: native function$' | scan '(^.+):' | each (
+    | var -local command
+
+    mfiler4::help $command | lines 1..-1 | scan '^-[a-zA-Z0-9-]+' |chomp| add -number 0 $command\a | hash -append -La COMPLETION_OPTIONS
 )
 

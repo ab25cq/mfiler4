@@ -634,7 +634,7 @@ int main(int argc, char* argv[])
     CHECKML_BEGIN(FALSE);    // start to watch memory leak
 
     /// initialization for envronment variable ///
-    setenv("VERSION", "1.1.2", 1);
+    setenv("VERSION", "1.1.3", 1);
     setenv("MFILER4_DOCDIR", DOCDIR, 1);
     setenv("MFILER4_DATAROOTDIR", DOCDIR, 1);
 
