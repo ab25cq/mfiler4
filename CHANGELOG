@@ -1,4 +1,80 @@
 
+2013 1st of March version 1.1.4
+
+    1. Stopped to bold view on directory name, link name and excutable file name when mfiler4 is color mode.
+
+    2. Changed mfiler4.xyzsh
+
+    3. Fixed bug with file name which containes control characters.
+
+    4. If mfiler4 is not color mode, you can use mfiler4 on Gnome-terminal with transparent background
+
+    5. Added mfiler4::start_color inner command
+
+    6. You can use incremental search with part matching to file name.
+
+    7. Fixed bug which is pressed ! to run file manager.
+
+    8. Change cursor moving algorithm.
+
+    9. Fixed bug with cmdline -q 
+
+    10. Added "mfiler4::sort" inner command
+
+    11. Instead of filer_reread, mfiler4 started to use mfiler4::reread to castamize mfiler4::reread especially orverriding mfiler4::reread.
+
+    12. Added "mfiler4::history" inner command
+
+    13. Fixed bug of menu scrolling.
+
+    14. Fixed bug of mcd.
+
+    15. Added history menu which is called by pressing H key.
+
+    16. Binded "cmdline -c" to 'h' key.
+
+    17. Delete setting PROMPT environment value.
+
+    require xyzsh-1.3.9 later
+
+2013 3月1日 version 1.1.4
+
+    1. ディレクトリやリンクのBOLD表示をやめました(カラーモードの時)
+
+    2. mfiler4.xyzshを編集。
+
+    3. コントロール文字を含むファイル名の表示を直しました。
+
+    4. mfiler4がカラーモードじゃない場合、Gnome-terminalの半透明背景色で使えるようになりました。
+
+    5. mfiler4::start_color内部コマンドが追加されています
+
+    6. Migemoじゃない場合でも、ファイル名のインクリメンタルサーチがパートマッチングになってます。
+
+    7. Gnomeで!を押したときにファイルマネージャーが起動しないバグを修正。
+
+    8. カーソルが右端に来たときに右を押すと、末尾に移動してしまうバグを修正。
+
+    9. cmdline -qをした場合端末の設定が戻らないバグを修正
+
+    10. "mfiler4::sort"内部コマンドの追加
+
+    11. 内部的にfiler_rereadする場合はmfiler4::rereadを使うようになりました。rereadをオーバーライドした場合も期待通りに動くようになりました。
+
+    12. mfiler4::history内部コマンドを追加。
+
+    13. メニューのスクロールのバグを修正。
+
+    14. backspaceでルートディレクトリ以上上がろうとするとエラーを出すバグを修正
+
+    15. Hによるヒストリメニューを追加。
+
+    16. hのコマンドラインへの移行がコマンド実行後もコマンドラインにとどまるように変更
+
+    17. PROMPT環境変数に値が設定されていたバグを修正。
+
+    xyzsh 1.3.9以上が必要。
+
 2013 8th of Feburary version 1.1.3
 
     1. Fixed migemo incremental search and migemo completion bugs on Darwin

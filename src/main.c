@@ -224,7 +224,6 @@ static void set_mfenv()
     setenv("VIEW_OPTION", "2pain", 1);
     setenv("SYSCONFDIR", SYSCONFDIR, 1);
     setenv("MF4DOCDIR", DOCDIR, 1);
-    setenv("PROMPT", "can't read run time script '.mfiler4'. press q key to quit", 1);
     setenv("VIEW_FILE_SIZE", "Normal", 1);
 
     setenv("MF4HOME", gHomeDir, 1);
@@ -634,7 +633,7 @@ int main(int argc, char* argv[])
     CHECKML_BEGIN(FALSE);    // start to watch memory leak
 
     /// initialization for envronment variable ///
-    setenv("VERSION", "1.1.3", 1);
+    setenv("VERSION", "1.1.4", 1);
     setenv("MFILER4_DOCDIR", DOCDIR, 1);
     setenv("MFILER4_DATAROOTDIR", DOCDIR, 1);
 
@@ -751,6 +750,9 @@ int main(int argc, char* argv[])
             }
         }
         else {
+            sObject* file_name2 = STRING_NEW_MALLOC(file_name);
+            string_quote(file_name2, kUtf8);
+
             if(!filer_new_dir(file_name, FALSE, ".+")) {
                 fprintf(stderr, "invalid directory(%s)\n", file_name);
                 exit(1);

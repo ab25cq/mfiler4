@@ -192,6 +192,7 @@ void str_cut2(enum eKanjiCode code, char* mbs, int termsize, char* dest_mbs, int
 ///////////////////////////////////////////////////
 void gui_init();
 
+void xstart_color();
 int xgetch(int* meta);
 void xinitscr();
 void xendwin();

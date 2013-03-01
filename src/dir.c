@@ -237,6 +237,24 @@ int convert_fname(char* src, char* des, int des_size)
 #endif
 }
 
+int convert_fname2(char* src, char* des, int des_size) 
+{
+    int i;
+    char* p = src;
+    char* p2 = des;
+    while(*p && (p2 - des) < des_size-1) {
+        if(*p >= 0 && *p < ' ' || *p == 127) {
+            *p2++ = '^';
+            *p2++ = *p + '@';
+            p++;
+        }
+        else {
+            *p2++ = *p++;
+        }
+    }
+    *p2 = 0;
+}
+
 int sDir_read(sDir* self)
 {
     if(self->mVD) {
@@ -253,6 +271,9 @@ int sDir_read(sDir* self)
                 i--;
                 continue;
             }
+
+            char fname2[4089];
+            convert_fname2(fname, fname2, 4089);
 
             char path[PATH_MAX];
             if(fname1[0] == '/') {
@@ -370,6 +391,8 @@ int sDir_read(sDir* self)
             if(convert_fname(entry->d_name, fname, 4089) == -1) {
                 continue;
             }
+            char fname2[4089];
+            convert_fname2(fname, fname2, 4089);
 
             char path[PATH_MAX];
             snprintf(path, PATH_MAX, "%s%s", string_c_str(self->mPath), entry->d_name);
@@ -424,7 +447,7 @@ int sDir_read(sDir* self)
                 }
                 
                 /// add ///
-                vector_add(self->mFiles, sFile_new(entry->d_name, fname, linkto, &stat_, &lstat_, mark, user, group, lstat_.st_uid, lstat_.st_gid));
+                vector_add(self->mFiles, sFile_new(entry->d_name, fname2, linkto, &stat_, &lstat_, mark, user, group, lstat_.st_uid, lstat_.st_gid));
             }
         }
         

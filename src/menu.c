@@ -324,8 +324,8 @@ void menu_input(int meta, int key)
 
             const int maxy = mgetmaxy() -2;
             
-            if(self->mCursor >= (self->mScrollTop+maxy)) {
-                self->mScrollTop += self->mCursor - (self->mScrollTop+maxy) + 1;
+            if(self->mCursor >= (self->mScrollTop+maxy-1)) {
+                self->mScrollTop += self->mCursor - (self->mScrollTop+maxy-1) + 1;
             }
             if(self->mCursor < self->mScrollTop) {
                 self->mScrollTop = self->mCursor;

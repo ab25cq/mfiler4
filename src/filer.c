@@ -228,7 +228,11 @@ BOOL filer_vd_end(int dir)
     sDir* self = (sDir*)vector_item(gDirs, dir);
 
     self->mVD = FALSE;
-    return filer_reread(dir);
+
+    char buf[256];
+    snprintf(buf, 256, "reread -d %d", dir);
+    int rcode;
+    return xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
 }
 
 BOOL filer_vd_add(int dir, char* fname)
@@ -348,6 +352,24 @@ BOOL filer_add_history(int dir, char* path)
     }
     vector_add(dir2->mHistory, STRING_NEW_MALLOC(string_c_str(dir2->mPath)));
     dir2->mHistoryCursor++;
+
+    return TRUE;
+}
+
+// result --> vector_obj of string_obj
+BOOL filer_get_hitory(sObject* result, int dir)
+{
+    ASSERT(TYPE(result) == T_VECTOR);
+
+    if(dir < 0 || dir >= vector_count(gDirs)) {
+        return FALSE;
+    }
+    sDir* dir2 = (sDir*)vector_item(gDirs, dir);
+
+    int i;
+    for(i=1; i<=dir2->mHistoryCursor; i++) {
+        vector_add(result, vector_item(dir2->mHistory, i));
+    }
 
     return TRUE;
 }
@@ -885,9 +907,13 @@ void filer_input(int meta, int key)
                 if(rcode == 0) {
                     xinitscr();
 
-                    filer_reread(0);
-                    filer_reread(1);
-                    (void)filer_reset_marks(adir());
+                    char buf[256];
+                    snprintf(buf, 256, "reread -d 0; reread -d 1; mark -a 0");
+                    int rcode;
+                    (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
+                    //filer_reread(0);
+                    //filer_reread(1);
+                    //(void)filer_reset_marks(adir());
                 }
                 else {
                     char str[128];
@@ -1467,6 +1493,20 @@ static void make_file_stat(sFile* file, char* buf, int buf_size)
         snprintf(buf + strlen(buf), buf_size - strlen(buf), " %-8s", group);
     }
 
+    char* env_mtime = getenv("VIEW_MTIME");
+    if(env_mtime && strcmp(env_mtime, "1") == 0) {
+        time_t t = file->mLStat.st_mtime;
+        struct tm* tm_ = (struct tm*)localtime(&t);
+
+        int year = tm_->tm_year-100;
+        if(year < 0) year+=100;
+        while(year > 100) year-=100;
+
+        snprintf(buf + strlen(buf), buf_size - strlen(buf), " %02d-%02d-%02d %02d:%02d"
+               , year, tm_->tm_mon+1
+               , tm_->tm_mday, tm_->tm_hour, tm_->tm_min);
+    }
+
     char* env_size = getenv("VIEW_SIZE");
     if(env_size && strcmp(env_size, "1") == 0) {
         char size[256];
@@ -1482,20 +1522,6 @@ static void make_file_stat(sFile* file, char* buf, int buf_size)
         xstrncat(format, "s", 128);
 
         snprintf(buf + strlen(buf), 256, format, size);
-    }
-
-    char* env_mtime = getenv("VIEW_MTIME");
-    if(env_mtime && strcmp(env_mtime, "1") == 0) {
-        time_t t = file->mLStat.st_mtime;
-        struct tm* tm_ = (struct tm*)localtime(&t);
-
-        int year = tm_->tm_year-100;
-        if(year < 0) year+=100;
-        while(year > 100) year-=100;
-
-        snprintf(buf + strlen(buf), buf_size - strlen(buf), " %02d-%02d-%02d %02d:%02d"
-               , year, tm_->tm_mon+1
-               , tm_->tm_mday, tm_->tm_hour, tm_->tm_min);
     }
 
     snprintf(buf + strlen(buf), buf_size - strlen(buf), " ");
@@ -1642,25 +1668,25 @@ void filer_view(int dir)
     char* env_color_dir = getenv("COLOR_DIR");
     int color_dir = 0;
     if(env_color_dir) {
-        color_dir = atoi(env_color_dir) | A_BOLD;
+        color_dir = atoi(env_color_dir);
     }
 
     char* env_color_exe = getenv("COLOR_EXE");
     int color_exe = 0;
     if(env_color_exe) {
-        color_exe = atoi(env_color_exe)| A_BOLD;
+        color_exe = atoi(env_color_exe);
     }
 
     char* env_color_link = getenv("COLOR_LINK");
     int color_link = 0;
     if(env_color_link) {
-        color_link = atoi(env_color_link)| A_BOLD;
+        color_link = atoi(env_color_link);
     }
 
     char* env_color_mark = getenv("COLOR_MARK");
     int color_mark = 0;
     if(env_color_mark) {
-        color_mark = atoi(env_color_mark)| A_BOLD;
+        color_mark = atoi(env_color_mark);
     }
 
     const int maxx = mgetmaxx();

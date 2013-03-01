@@ -104,23 +104,30 @@ def toggle_nameonly_mode (
 )
 
 # color ####################
+def init_color (
+    if(COLOR |chomp| = 0) (
+        print 0 | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK )
+        export ma_bold | ( | export COLOR_EXE; | export COLOR_DIR )
+    ) else (
+        start_color
+
+        export ma_cyan | export COLOR_DIR
+        export ma_green | export COLOR_EXE
+        export ma_magenta | export COLOR_LINK
+        export ma_yellow | export COLOR_MARK
+    )
+)
+
 print 0 | var COLOR
-export ma_bold | ( | export COLOR_DIR; | export COLOR_EXE; | export COLOR_LINK; | export COLOR_MARK)
+init_color
 
 def toggle_color (
     if(COLOR |chomp| = 0) (
-        if (export HAS_COLOR | = 1\n) (
-            print 1 | var COLOR
-
-            export ma_cyan | export COLOR_DIR
-            export ma_green | export COLOR_EXE
-            export ma_magenta | export COLOR_LINK
-            export ma_yellow | export COLOR_MARK
-        )
+        print 1 | var COLOR
+        init_color
     ) else (
         print 0 | var COLOR
-
-        export ma_bold | (| export COLOR_DIR; | export COLOR_EXE; | export COLOR_MARK; | export COLOR_LINK)
+        init_color
     )
 )
 
@@ -353,8 +360,8 @@ keycommand $key_up ( cursor_move -1 )
 keycommand $key_down ( cursor_move +1 )
 keycommand $key_ctrl_p ( cursor_move -1 )
 keycommand $key_ctrl_n ( cursor_move +1 )
-keycommand $key_h ( cmdline )
-keycommand $key_H ( cmdline -c )
+keycommand $key_h ( cmdline -c )
+#keycommand $key_H ( cmdline -c )
 
 keycommand $key_enter (
     marking | if(| = 1\n) (
@@ -375,7 +382,7 @@ def scroll_left (
 )
 
 def scroll_right (
-    if(row |chomp| != $(row_max |chomp| - 1)) (
+    if(row | -lt $(row_max | - 1)) (
         cursor_move +$(line_max|chomp)
     )
 )
@@ -475,6 +482,8 @@ def save_mfiler4_stat (
         if(defined migemo_file_completion) ( print migemo_completion\n ) else ( print nomigemo_completion\n)
         if(defined migemo::match) ( print migemo\n ) else ( print nomigemo \n )
 
+        var COLOR
+
     ) > $MF4HOME/stat
 )
 
@@ -483,7 +492,7 @@ def load_mfiler4_stat (
     cat $MF4HOME/stat | (
         |12 export VIEW_SIZE VIEW_OPTION VIEW_MTIME VIEW_OWNER VIEW_GROUP VIEW_NLINK VIEW_PERMISSION VIEW_DIVIDE_EXTENSION VIEW_FOCUSBACK VIEW_PAGE VIEW_FILE_SIZE VIEW_ADD_STAR_EXE 
         |4 export COLOR_DIR COLOR_EXE COLOR_LINK COLOR_MARK 
-        |3 export SORT_KIND SORT_DIR_UP SORT_MARK_UP;
+        |3 export SORT_KIND SORT_DIR_UP SORT_MARK_UP
 
         |1 var -local PATH
         |1 var -local MASK
@@ -520,10 +529,13 @@ def load_mfiler4_stat (
             )
             |1 if(|strip | = migemo) ( load -dynamic-library migemo.so )
         ) else (
-            if(readline "Do you want to load migemo which is for Japanse ROMAJI Incremental Search ?(y/n)" | =~ ^y) (
+            if(readline -no-completion "Do you want to load migemo which is for Japanse ROMAJI Incremental Search ?(y/n)" | =~ ^y) (
                 load -dynamic-library migemo.so
             )
         )
+
+        |1 var COLOR
+        init_color
 
         reread -d all
     )
@@ -531,7 +543,7 @@ def load_mfiler4_stat (
 
 # initialize mfiler4 stat 
 def init_mfiler4_stat (
-    if(readline "Do you use Migemo which is for Japanese Romaji Incremental Search? (y/n)" | chomp | =~ -ignore-case ^y) (
+    if(readline -no-completion "Do you use Migemo which is for Japanese Romaji Incremental Search? (y/n)" | chomp | =~ -ignore-case ^y) (
         load -dynamic-library migemo.so
     )
 )
@@ -751,7 +763,7 @@ keycommand $key_g          (
     if(marking | chomp | = 1) (
         cmdline "mfiler4::sgrep -R  "'$$(mfiler4::markfiles)' 18
     ) else (
-        cmdline "mfiler4::sgrep  *" 15
+        cmdline "mfiler4::sgrep  "'$$(mfiler4::allfiles)' 15
     )
 )
 
@@ -759,7 +771,7 @@ keycommand $key_G          (
     if(marking | chomp | = 1) (
         cmdline "grep -R  "'$$(mfiler4::markfiles)'" | scan '^(.+?):' | uniq | mfiler4::vd" 8
     ) eles (
-        cmdline "grep  * | scan '^(.+?):' | uniq | mfiler4::vd" 5 
+        cmdline "grep  "'$$(mfiler4::allfiles)'" | scan '^(.+?):' | uniq | mfiler4::vd" 5 
     )
 )
 
@@ -899,13 +911,7 @@ def run_file_manager (
     ) elif(| index -quiet Darwin) (
         sys::open . & 
     ) else (
-        ps axw | grep -v grep | if (| index -quiet nautilus) (
-            sys::nautilus "$PWD" %2>/dev/null
-        ) elif(| index -quiet kdeinit) (
-            sys::konqueror "$PWD" %2>/dev/null &
-        ) elif(| index -quiet xfdesktop) (
-            sys::thunar "$PWD" %2>/dev/null
-        )
+        sys::gnome-open . | (|print > /dev/null; | print -read-from-error > /dev/null)
     )
 )
 
@@ -920,7 +926,7 @@ print -1 | var MARK_RANGE_BEGIN
 def mcd -inherit -option-with-argument d (
     print -1 | var MARK_RANGE_BEGIN
 
-    eval "inherit $(OPTIONS|uniq|join|chomp) $(ARGV|each(|chomp|quote|pomch)|join|chomp)"
+    inherit $$-(OPTIONS|uniq) $$(ARGV)
 ) 
 
 keycommand $key_rbrack    ( 
@@ -1054,7 +1060,32 @@ keycommand $key_U (
 
 keycommand $key_qmark -external ( mfiler4::help | less )
 
+########################################
+# history menu
+########################################
+def make_history_menu (
+    defmenu history
+
+    print 0 | var -local I
+    mfiler4::history | lines -1..0 | head -n 256 | each (
+        | var -local Item
+        print 65 | + $I | printf "%c" | var -local Key
+        eval "addmenu history '($Key) $Item' '$(print 97 | + $I|chomp)' ( mcd $Item ) "
+
+        ++ I
+
+        if(I | -ge 125) ( -- I )
+    )
+)
+
+keycommand $key_H (
+    make_history_menu
+    mmenu history
+)
+
+########################################
 # jump menu
+########################################
 def add_jump_menu (
     print $ARGV[0] | ary -append -1 JUMP_MENU
 
@@ -1113,6 +1144,9 @@ def quit -inherit (
     inherit
 )
 
+########################################
+# incremetal search
+########################################
 mfiler4::run (
     if(uname | = Darwin\n) (
         def isearch_match_next (
@@ -1138,7 +1172,7 @@ mfiler4::run (
                 ARGV | var -local I InputFileName
 
                 while(I | -lt $(file_num|chomp)) (
-                    if(file_name $I |chomp| index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                    if(file_name $I |chomp| index -byte -ignore-case -quiet $InputFileName) (
                         cursor_move $I
                         return 0
                     )
@@ -1173,7 +1207,7 @@ mfiler4::run (
                 ARGV | var -local I InputFileName
 
                 while(I | -ge 0) (
-                    if(file_name $I | index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                    if(file_name $I | index -byte -ignore-case -quiet $InputFileName) (
                         cursor_move $I
                         return 0
                     )
@@ -1208,7 +1242,7 @@ mfiler4::run (
                 ARGV | var -local I InputFileName
 
                 while(I | -lt $(file_num|chomp)) (
-                    if(file_name $I |chomp| index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                    if(file_name $I |chomp| index -quiet -byte -ignore-case $InputFileName) (
                         cursor_move $I
                         return 0
                     )
@@ -1243,7 +1277,7 @@ mfiler4::run (
                 ARGV | var -local I InputFileName
 
                 while(I | -ge 0) (
-                    if(file_name $I | index -byte -ignore-case $InputFileName| lines 0 | = 0\n) (
+                    if(file_name $I | index -quiet -byte -ignore-case $InputFileName) (
                         cursor_move $I
                         return 0
                     )
@@ -1415,6 +1449,15 @@ mmenu メニュー名
 reread
 -
 指定されたディレクトリを再読み込みする
+-d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
+-
+start_color
+-
+カーシスをカラーモードにしはじめる
+-
+sort
+-
+指定されたディレクトリをソートする
 -d [all|adir|sdir|n(数値)] ディレクトリを指定するオプションです。
 -
 markfiles
@@ -1658,6 +1701,15 @@ reread
 reread disk
 -d [all|adir|sdir|n] specifies directory
 -
+start_color
+-
+Initialize curses color mode
+-
+sort
+-
+sort files
+-d [all|adir|sdir|n] specifies directory
+-
 markfiles
 -
 write mark files
@@ -1794,11 +1846,8 @@ completion mfiler4::__all__ (
     hash mfiler4::COMPLETION_OPTIONS -key $Program
 )
 
-print ""\n"" | hash COMPLETION_OPTIONS
-
 mfiler4 | egrep ': native function$' | egrep -v '^run: native function$|^show: native function$' | scan '(^.+):' | each (
     | var -local command
 
     mfiler4::help $command | lines 1..-1 | scan '^-[a-zA-Z0-9-]+' |chomp| add -number 0 $command\a | hash -append -La COMPLETION_OPTIONS
 )
-

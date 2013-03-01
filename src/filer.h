@@ -77,6 +77,7 @@ BOOL filer_sort(int dir);
 BOOL filer_cd(int dir, char* path);
 BOOL filer_history_forward(int dir);
 BOOL filer_history_back(int dir);
+BOOL filer_get_hitory(sObject* result, int dir); // result --> vector_obj of string_obj
 BOOL filer_reread(int dir);
 BOOL filer_cursor_move(int dir, int num);
 BOOL filer_activate(int dir);

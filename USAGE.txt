@@ -46,6 +46,7 @@ V                                 open view menu
 o,O                               copy direcotry path
 w                                 exchange two directories
 j                                 jump menu
+H                                 directory history menu
 J                                 cmdline jump
 h                                 switch to command line mode
 x                                 excute under file

@@ -54,6 +54,20 @@ BOOL cmd_keycommand(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     return TRUE;
 }
 
+BOOL cmd_start_color(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
+{
+    if(mis_raw_mode()) {
+        xstart_color();
+    }
+    else {
+        xinitscr();
+        xstart_color();
+        xendwin();
+    }
+    runinfo->mRCode = 0;
+    return TRUE;
+}
+
 BOOL cmd_cursor_move(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
     if(runinfo->mArgsNumRuntime == 2) {
@@ -200,7 +214,7 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             fprintf(stderr, "$HOME is NULL.exit");
             exit(1); 
          } 
-	
+
         if(!filer_cd(dir, home)) {
             err_msg("cd failed", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
             return FALSE;
@@ -212,6 +226,61 @@ BOOL cmd_mcd(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
         runinfo->mRCode = 0;
     }
+
+    return TRUE;
+}
+
+BOOL cmd_history(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
+{
+    char* darg = sRunInfo_option_with_argument(runinfo, "-d");
+
+    int dir;
+    if(darg == NULL) {
+        dir = adir();
+    }
+    else if(strcmp(darg, "all") == 0) {
+        err_msg("can't get option -d all", runinfo->mSName, runinfo->mSLine, "mcd");
+        return FALSE;
+    }
+    else if(strcmp(darg, "adir") == 0) {
+        dir = adir();
+    }
+    else if(strcmp(darg, "sdir") == 0) {
+        dir = sdir();
+    }
+    else {
+        dir = atoi(darg);
+
+        if(dir < 0 || dir >= vector_count(gDirs)) {
+            err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
+            return FALSE;
+        }
+    }
+
+    sObject* history = VECTOR_NEW_MALLOC(10);
+    (void)filer_get_hitory(history, dir);
+
+    int i;
+    for(i=0; i<vector_count(history); i++) {
+        char* item = string_c_str((sObject*)vector_item(history, i));
+
+        if(!fd_write(nextout, item, strlen(item))) {
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
+            runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
+            vector_delete_on_malloc(history);
+            return FALSE;
+        }
+        if(!fd_write(nextout, "\n", 1)) {
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
+            runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
+            vector_delete_on_malloc(history);
+            return FALSE;
+        }
+    }
+
+    vector_delete_on_malloc(history);
+
+    runinfo->mRCode = 0;
 
     return TRUE;
 }
@@ -810,8 +879,8 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     int rcode;
 
     if(continue_) {
-        rcode = 0;
-        xyzsh_readline_interface(cmdline, cursor, NULL, 0);
+        rcode = -2;
+        xyzsh_readline_interface(cmdline, cursor, NULL, 0, TRUE);
     }
     else {
         if(!xyzsh_readline_interface_onetime(&rcode, cmdline, cursor, "cmdline", NULL, 0, NULL)) {
@@ -820,9 +889,14 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     }
 
     if(rcode == 0) {
-        filer_reread(0);
-        filer_reread(1);
-        (void)filer_reset_marks(adir());
+        //filer_reread(0);
+        //filer_reread(1);
+        //(void)filer_reset_marks(adir());
+
+        char buf[256];
+        snprintf(buf, 256, "reread -d 0; reread -d 1; mark -a 0");
+        int rcode;
+        (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
     }
 
     /// EOF ///
@@ -830,6 +904,7 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
         printf("\x1b[2K");
         //printf("\x1b[1B\x1b[2K");
         reset_prog_mode();
+        xinitscr();
     }
     /// an error occures or no quick ///
     else if(rcode != 0 || !quick) {
@@ -846,6 +921,8 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     /// quick ///
     else {
         reset_prog_mode();
+
+        xinitscr();
     }
 
     set_signal_mfiler();
@@ -980,6 +1057,52 @@ BOOL cmd_reread(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         else {
             if(!filer_reread(dir)) {
+                err_msg("reread error", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
+                return FALSE;
+            }
+            runinfo->mRCode = 0;
+        }
+    }
+
+    return TRUE;
+}
+
+BOOL cmd_sort(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
+{
+    if(runinfo->mArgsNumRuntime == 1) {
+        char* darg = sRunInfo_option_with_argument(runinfo, "-d");
+
+        int dir;
+        if(darg == NULL) {
+            dir = adir();
+        }
+        else if(strcmp(darg, "all") == 0) {
+            dir = -1;
+        }
+        else if(strcmp(darg, "adir") == 0) {
+            dir = adir();
+        }
+        else if(strcmp(darg, "sdir") == 0) {
+            dir = sdir();
+        }
+        else {
+            dir = atoi(darg);
+
+            if(dir < 0 || dir >= vector_count(gDirs)) {
+                err_msg("invalid dir number", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
+                return FALSE;
+            }
+        }
+
+        if(dir < 0) {
+            int j;
+            for(j=0; j<vector_count(gDirs); j++) {
+                (void)filer_sort(j);
+            }
+            runinfo->mRCode = 0;
+        }
+        else {
+            if(!filer_sort(dir)) {
                 err_msg("reread error", runinfo->mSName, runinfo->mSLine, runinfo->mArgs[0]);
                 return FALSE;
             }
@@ -1854,8 +1977,12 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 }
 
                 if(reread) {
-                    (void)filer_reread(0);
-                    (void)filer_reread(1);
+                    char buf[256];
+                    snprintf(buf, 256, "reread -d 0; reread -d 1");
+                    int rcode;
+                    (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
+                    //(void)filer_reread(0);
+                    //(void)filer_reread(1);
                 }
             }
             else {
@@ -1865,10 +1992,20 @@ BOOL cmd_mask(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 }
 
                 if(reread) {
-                    if(dir == 0)
-                        (void)filer_reread(0);
-                    else if(dir == 1) 
-                        (void)filer_reread(1);
+                    if(dir == 0) {
+                        char buf[256];
+                        snprintf(buf, 256, "reread -d %d", dir);
+                        int rcode;
+                        (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
+                        //(void)filer_reread(0);
+                    }
+                    else if(dir == 1)  {
+                        char buf[256];
+                        snprintf(buf, 256, "reread -d %d", dir);
+                        int rcode;
+                        (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
+                        //(void)filer_reread(1);
+                    }
                 }
             }
 
@@ -1979,7 +2116,11 @@ BOOL cmd_mrename(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
 
         if(reread) {
-            (void)filer_reread(adir());
+            //(void)filer_reread(adir());
+            char buf[256];
+            snprintf(buf, 256, "reread -d %d", adir());
+            int rcode;
+            (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
         }
         
         if(cursor_move) {
@@ -2223,12 +2364,20 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
             dir = filer_dir(0);
             if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
-                (void)filer_reread(0);
+                //(void)filer_reread(0);
+                char buf[256];
+                snprintf(buf, 256, "reread -d %d", 0);
+                int rcode;
+                (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
             }
 
             dir = filer_dir(1);
             if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
-                (void)filer_reread(1);
+                //(void)filer_reread(1);
+                char buf[256];
+                snprintf(buf, 256, "reread -d %d", 1);
+                int rcode;
+                (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
             }
 
             runinfo->mRCode = 0;
@@ -2314,7 +2463,11 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     }
                 }
 
-                (void)filer_reread(adir());
+                //(void)filer_reread(adir());
+                char buf[256];
+                snprintf(buf, 256, "reread -d %d", adir());
+                int rcode;
+                (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
                 runinfo->mRCode = 0;
             }
         }
@@ -2447,8 +2600,12 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             refresh();
             */
 
-            (void)filer_reread(0);
-            (void)filer_reread(1);
+            //(void)filer_reread(0);
+            //(void)filer_reread(1);
+            char buf[256];
+            snprintf(buf, 256, "reread -d 0; reread -d 1");
+            int rcode;
+            (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
 
             runinfo->mRCode = 0;
         }
@@ -2529,8 +2686,12 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         refresh();
         */
 
-        (void)filer_reread(0);
-        (void)filer_reread(1);
+        //(void)filer_reread(0);
+        //(void)filer_reread(1);
+        char buf[256];
+        snprintf(buf, 256, "reread -d 0; reread -d 1");
+        int rcode;
+        (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
 
         runinfo->mRCode = 0;
     }
@@ -2672,8 +2833,13 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             refresh();
             */
 
-            (void)filer_reread(0);
-            (void)filer_reread(1);
+            //(void)filer_reread(0);
+            //(void)filer_reread(1);
+            
+            char buf[256];
+            snprintf(buf, 256, "reread -d 0; reread -d 1");
+            int rcode;
+            (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
 
             runinfo->mRCode = 0;
         }
@@ -2799,12 +2965,20 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
             dir = filer_dir(0);
             if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
-                (void)filer_reread(0);
+                //(void)filer_reread(0);
+                char buf[256];
+                snprintf(buf, 256, "reread -d 0");
+                int rcode;
+                (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
             }
 
             dir = filer_dir(1);
             if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
-                (void)filer_reread(1);
+                //(void)filer_reread(1);
+                char buf[256];
+                snprintf(buf, 256, "reread -d 1");
+                int rcode;
+                (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
             }
 
             runinfo->mRCode = 0;
@@ -3045,6 +3219,7 @@ void commands_init()
     xyzsh_add_inner_command(gMFiler4, "addmenu", cmd_addmenu, 0);
     xyzsh_add_inner_command(gMFiler4, "mmenu", cmd_mmenu, 0);
     xyzsh_add_inner_command(gMFiler4, "reread", cmd_reread, 1, "-d");
+    xyzsh_add_inner_command(gMFiler4, "sort", cmd_sort, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "markfiles", cmd_markfiles, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "allfiles", cmd_allfiles, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "mark", cmd_mark, 1, "-d");
@@ -3074,6 +3249,8 @@ void commands_init()
     xyzsh_add_inner_command(gMFiler4, "cmdline", cmd_cmdline, 0);
     xyzsh_add_inner_command(gMFiler4, "cursor", cmd_cursor, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "prompt", cmd_mfiler4_prompt, 0);
+    xyzsh_add_inner_command(gMFiler4, "start_color", cmd_start_color, 0);
+    xyzsh_add_inner_command(gMFiler4, "history", cmd_history, 1, "-d");
 }
 
 void commands_final()

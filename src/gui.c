@@ -12,6 +12,7 @@
 #include <ncurses/ncurses.h>
 #endif
 
+
 void xinitscr()
 {
     initscr();
@@ -19,7 +20,17 @@ void xinitscr()
     noecho();
     keypad(stdscr, TRUE);
     //curs_set(0);
+}
 
+void xendwin()
+{
+    keypad(stdscr, FALSE);
+    noraw();
+    endwin();
+}
+
+void xstart_color()
+{
     int background = COLOR_BLACK;
 
     if(has_colors()) {
@@ -41,13 +52,6 @@ void xinitscr()
     else {
         setenv("HAS_COLOR", "0", 1);
     }
-}
-
-void xendwin()
-{
-    keypad(stdscr, FALSE);
-    noraw();
-    endwin();
 }
 
 int xgetch(int* meta)
