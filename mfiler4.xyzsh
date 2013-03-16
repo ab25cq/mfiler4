@@ -498,17 +498,21 @@ def load_mfiler4_stat (
         |1 var -local MASK
         |1 var -local MASK_DOTDIR
 
-        mcd -d 0 $PATH
-        mask -d 0 $MASK
-        mask -d 0 -dotdir $MASK_DOTDIR
+        try (
+            mcd -d 0 $PATH
+            mask -d 0 $MASK
+            mask -d 0 -dotdir $MASK_DOTDIR
+        ) catch () 
 
         |1 var -local PATH
         |1 var -local MASK
         |1 var -local MASK_DOTDIR
 
-        mcd -d 1 $PATH
-        mask -d 1 $MASK
-        mask -d 1 -dotdir $MASK_DOTDIR
+        try (
+            mcd -d 1 $PATH
+            mask -d 1 $MASK
+            mask -d 1 -dotdir $MASK_DOTDIR
+        ) catch ()
 
         |1 var -local DIRECTORY_NUMBER
 
@@ -529,7 +533,7 @@ def load_mfiler4_stat (
             )
             |1 if(|strip | = migemo) ( load -dynamic-library migemo.so )
         ) else (
-            if(readline -no-completion "Do you want to load migemo which is for Japanse ROMAJI Incremental Search ?(y/n)" | =~ ^y) (
+            if(readline "Do you want to load migemo which is for Japanse ROMAJI Incremental Search ?(y/n)" ( print "yes no" | split ) | =~ ^y) (
                 load -dynamic-library migemo.so
             )
         )
@@ -543,7 +547,7 @@ def load_mfiler4_stat (
 
 # initialize mfiler4 stat 
 def init_mfiler4_stat (
-    if(readline -no-completion "Do you use Migemo which is for Japanese Romaji Incremental Search? (y/n)" | chomp | =~ -ignore-case ^y) (
+    if(readline "Do you use Migemo which is for Japanese Romaji Incremental Search? (y/n)" (print "yes no" | split ) | chomp | =~ -ignore-case ^y) (
         load -dynamic-library migemo.so
     )
 )
@@ -1086,21 +1090,39 @@ keycommand $key_H (
 ########################################
 # jump menu
 ########################################
-def add_jump_menu (
-    print $ARGV[0] | ary -append -1 JUMP_MENU
+def add_jump_menu_with_no_key (
+    print $ARGV[0] | ary -append JUMP_MENU
 
-    make_jump_menu
+    make_jump_menu_with_no_key
 )
 
-def clear_jump_menu (
+def add_jump_menu_with_key (
+    print $ARGV[0] | ary -append JUMP_MENU
+    print $ARGV[1] | ary -append JUMP_MENU_KEY
+
+    make_jump_menu_with_key
+)
+
+def clear_jump_menu_with_no_key (
     if(defined JUMP_MENU) (
         sweep JUMP_MENU
     )
 
-    make_jump_menu
+    make_jump_menu_with_no_key
 )
 
-def make_jump_menu (
+def clear_jump_menu_with_key (
+    if(defined JUMP_MENU) (
+        sweep JUMP_MENU
+    )
+    if(defined JUMP_MENU_KEY) (
+        sweep JUMP_MENU_KEY
+    )
+
+    make_jump_menu_with_key
+)
+
+def make_jump_menu_with_no_key (
     defmenu jump
 
     if(defined JUMP_MENU) (
@@ -1113,11 +1135,31 @@ def make_jump_menu (
     )
 
     addmenu jump "-----------------" $key_X -external ( print dummy )
-    addmenu jump '(A)dd current directory to jump mmenu' $key_A ( cmdline "mfiler4::add_jump_menu '$(path -d adir|chomp)'" -2 )
-    addmenu jump '(C)lear jump mmenu' $key_C ( clear_jump_menu )
+    addmenu jump '(A)dd current directory to jump mmenu' $key_A ( cmdline "mfiler4::add_jump_menu_with_no_key '$(path -d adir|chomp)'" -2 )
+    addmenu jump '(C)lear jump mmenu' $key_C ( clear_jump_menu_with_no_key )
 )
 
-def save_jump_menu (
+def make_jump_menu_with_key (
+    defmenu jump
+
+    if(defined JUMP_MENU) (
+        print 0 | var -local I
+        while(I | -lt $(ary -size JUMP_MENU)) (
+            ary JUMP_MENU_KEY -index $I | var -local Key
+
+            Key | printf "%c" | var -local KeyTitle
+            eval "addmenu jump '($KeyTitle) $(ary JUMP_MENU -index $I|chomp)' '$Key' ( mcd '$(ary JUMP_MENU -index $I|chomp)' )" 
+
+            ++ I
+        )
+    )
+
+    addmenu jump "-----------------" $key_X -external ( print dummy )
+    addmenu jump '(A)dd current directory to jump mmenu' $key_A ( cmdline "mfiler4::add_jump_menu_with_key '$(path -d adir|chomp)'"' $mfiler4::key_' -1 )
+    addmenu jump '(C)lear jump mmenu' $key_C ( clear_jump_menu_with_key )
+)
+
+def save_jump_menu_with_no_key (
     if(defined JUMP_MENU) (
         ary JUMP_MENU > $MF4HOME/jump
     ) else (
@@ -1125,22 +1167,65 @@ def save_jump_menu (
     )
 )
 
-def load_jump_menu (
-    cat $MF4HOME/jump | ary JUMP_MENU
-    make_jump_menu
+def save_jump_menu_with_key (
+    if(defined JUMP_MENU) (
+        print 0 | var -local I
+        times $(ary -size JUMP_MENU|chomp) ( 
+            (ary JUMP_MENU -index $I; ary JUMP_MENU_KEY -index $I) | join ,
+            ++ I
+        ) > $MF4HOME/jump
+    ) else (
+        rm -rf $MF4HOME/jump
+    )
 )
 
-clear_jump_menu
+def load_jump_menu_with_key (
+    cat $MF4HOME/jump | each (
+        | strip | split ,
+    ) | each -number 2 (
+        |1 ary -append JUMP_MENU
+        |1 ary -append JUMP_MENU_KEY
+    )
+
+    make_jump_menu_with_key
+)
+
+def load_jump_menu_with_no_key (
+    cat $MF4HOME/jump | ary JUMP_MENU
+
+    make_jump_menu_with_no_key
+)
 
 if(print $MF4HOME/jump | -e) (
-    load_jump_menu
+    if(cat $MF4HOME/jump | lines 0 | index -quiet , ) (
+        load_jump_menu_with_key
+        print 0 | var JUMP_MENU_KIND
+    ) else (
+        load_jump_menu_with_no_key
+        print 1 | var JUMP_MENU_KIND
+    )
 )
 
-keycommand $key_j ( mmenu jump )
+def init_jump_menu_kind (
+    if(readline -no-completion "Do you use jump menu with automatically key settings? (y/n)" | =~ '^y.*|^Y.*') (
+        clear_jump_menu_with_no_key
+        print 1 | var JUMP_MENU_KIND
+    ) else (
+        clear_jump_menu_with_key
+        print 0 | var JUMP_MENU_KIND
+    )
+)
+
+keycommand $key_j ( if(! defined JUMP_MENU_KIND) ( curses::endwin; init_jump_menu_kind; curses::initscr ); mmenu jump )
 
 def quit -inherit (
-    mfiler4::save_jump_menu
-
+    if(defined JUMP_MENU_KIND) (
+        if(JUMP_MENU_KIND | -eq 1) (
+            mfiler4::save_jump_menu_with_no_key
+        ) else (
+            mfiler4::save_jump_menu_with_key
+        )
+    )
     inherit
 )
 

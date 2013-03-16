@@ -888,7 +888,7 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
         }
     }
 
-    if(rcode == 0) {
+    if(rcode == 0 || rcode == -2) {
         //filer_reread(0);
         //filer_reread(1);
         //(void)filer_reset_marks(adir());

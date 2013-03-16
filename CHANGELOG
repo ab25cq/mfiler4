@@ -1,4 +1,24 @@
 
+2013 16th of March version 1.1.6
+
+    require xyzsh version 1.4.1
+
+2013 3月16日 version 1.1.6
+    
+    1. readlineを使っている部分で補完ができるようになってます。
+
+    xyzsh version 1.4.1以上が必要です。
+
+2013 8th of March version 1.1.5
+
+    1. Made jump menu with key settings and jump menu without key settings. If you want to select this, rm ~/.mfiler4/jump
+
+2013 ３月８日 version 1.1.5
+
+    1. ジャンプメニューをキーバインドを設定できるものと設定でできないものを用意しました。~/.mfiler4/jumpの内容をみてどっちを使うか選択しているので、もう一度どちらを使いたいか選択したい場合はrm ~/.mfiler4/jumpをしてください。ジャンプメニューの起動時に選べます。
+
+    xyzsh version 1.4.0が必要です。
+
 2013 1st of March version 1.1.4
 
     1. Stopped to bold view on directory name, link name and excutable file name when mfiler4 is color mode.
