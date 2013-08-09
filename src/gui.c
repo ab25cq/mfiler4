@@ -558,14 +558,12 @@ int select_str(char* msg, char* str[], int len, int cancel)
     
     gSelectStrCursor = 0;
     
-    gView = select_str_view;
-    
     while(1) {
         xclear();
         view();
-        //filer_view(0);
-        //filer_view(1);
-        //select_str_view();
+        filer_view(0);
+        filer_view(1);
+        select_str_view();
         refresh();
 
         /// input ///
@@ -622,11 +620,10 @@ int select_str2(char* msg, char* str[], int len, int cancel)
     
     gSelectStrCursor = 0;
     
-    //gView = select_str_view;
-    
     while(1) {
         xclear();
-        view(); //select_str_view();
+        view();
+        select_str_view();
         refresh();
 
         /// input ///

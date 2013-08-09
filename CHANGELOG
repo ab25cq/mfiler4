@@ -1,4 +1,12 @@
 
+2013 9th of August version 1.2.4
+
+    1. Modified bug with copy override screen.
+
+2013 8月9日 version 1.2.4
+
+    1. コピーの上書き時の画面にバグがありました。修正しています。
+
 2013 6th of August version 1.2.3
 
     1. Changed the way of screen refresh.
