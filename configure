@@ -604,6 +604,7 @@ LIBOBJS
 EGREP
 GREP
 CPP
+SYSTEM_MIGEMODIR
 INSTALL_DATA
 INSTALL_SCRIPT
 INSTALL_PROGRAM
@@ -659,8 +660,10 @@ with_debug
 with_gprof_debug
 with_optimize
 with_onig_dir
-with_migemo
 with_xyzsh_dir
+with_migemo
+with_migemo_dir
+with_system_migemodir
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1283,8 +1286,10 @@ Optional Packages:
   --with-gprof-debug        include debug info
   --with-optimize           with optimize flag(-O2) CFLAGS
   --with-onig-dir=DIR       set oniguruma directory
-  --with-migemo             for cygwin option.
   --with-xyzsh-dir=DIR    set xyzsh directory
+  --with-migemo             enable migemo for japanese romaji completion
+  --with-migemo-dir=DIR     set migemo install prefix
+ --with-system-migemodir       specify the directory of system migemo dictionary. /usr/share/migemo, for example
 
 Some influential environment variables:
   CC          C compiler command
@@ -1919,7 +1924,7 @@ $as_echo "$as_me: loading site script $ac_site_file" >&6;}
       || { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "failed to load site script $ac_site_file
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
   fi
 done
 
@@ -2313,7 +2318,7 @@ fi
 test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "no acceptable C compiler found in \$PATH
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
 
 # Provide some information about the compiler.
 $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
@@ -2428,7 +2433,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "C compiler cannot create executables
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
@@ -2471,7 +2476,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of executables: cannot compile and link
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 rm -f conftest conftest$ac_cv_exeext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_exeext" >&5
@@ -2530,7 +2535,7 @@ $as_echo "$ac_try_echo"; } >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot run C compiled programs.
 If you meant to cross compile, use \`--host'.
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
     fi
   fi
 fi
@@ -2582,7 +2587,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of object files: cannot compile
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 rm -f conftest.$ac_cv_objext conftest.$ac_ext
 fi
@@ -2966,14 +2971,6 @@ else
 fi
 
 
-# Check whether --with-migemo was given.
-if test "${with_migemo+set}" = set; then :
-  withval=$with_migemo;  ENABLE_MIGEMO=1
-else
-   ENABLE_MIGEMO=0
-fi
-
-
 # Check whether --with-xyzsh-dir was given.
 if test "${with_xyzsh_dir+set}" = set; then :
   withval=$with_xyzsh_dir;  XYZSH_DIR="$with_val"
@@ -2982,7 +2979,33 @@ else
 fi
 
 
-CFLAGS='-DSYSCONFDIR="\"${sysconfdir}/\"" -DDOCDIR="\"${docdir}/\""'
+# Check whether --with-migemo was given.
+if test "${with_migemo+set}" = set; then :
+  withval=$with_migemo;  ENABLE_MIGEMO=1
+else
+   ENABLE_MIGEMO=0
+fi
+
+
+# Check whether --with-migemo-dir was given.
+if test "${with_migemo_dir+set}" = set; then :
+  withval=$with_migemo_dir;  MIGEMO_DIR="$withval"
+else
+   MIGEMO_DIR=
+fi
+
+
+# Check whether --with-system-migemodir was given.
+if test "${with_system_migemodir+set}" = set; then :
+  withval=$with_system_migemodir;  if test -n "$withval"; then echo "system-migemodir = $withval" ; SYSTEM_MIGEMODIR="$withval"; fi
+else
+   if test -e /usr/local/share/migemo/utf-8/migemo-dict; then SYSTEM_MIGEMODIR=/usr/local/share/migemo; else SYSTEM_MIGEMODIR=/usr/share/cmigemo; fi
+fi
+
+
+
+
+CFLAGS='-DSYSCONFDIR="\"${sysconfdir}/\"" -DDOCDIR="\"${docdir}/\"" -DSYSTEM_MIGEMODIR="\"${SYSTEM_MIGEMODIR}\""'
 
 if test $DEBUGGING = 1
 then
@@ -3032,6 +3055,16 @@ then
          CFLAGS="$CFLAGS -I$XYZSH_DIR/include -L$XYZSH_DIR/lib"
     else
         echo "can't found xyzsh/xyzsh.h in $XYZSH_DIR/include or libxyzsh.a in $XYZSH_DIR/lib"
+    fi
+fi
+
+if test -n "$MIGEMO_DIR"
+then
+    if test -e "$MIGEMO_DIR/include/migemo.h" && test -e "$MIGEMO_DIR/lib/libmigemo.so"
+    then
+        CFLAGS="$CFLAGS -I$MIGEMO_DIR/include -L$MIGEMO_DIR/lib"
+    else
+        echo "can't found migemo.h in $MIGEMO_DIR/include or libmigemo.so in $MIGEMO_DIR/lib"
     fi
 fi
 
@@ -3205,7 +3238,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5 ; }
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 
 ac_ext=c
@@ -3484,65 +3517,6 @@ fi
 
 
 
-######################################################################
-# readline settings
-######################################################################
-ac_fn_c_check_header_mongrel "$LINENO" "readline/readline.h" "ac_cv_header_readline_readline_h" "$ac_includes_default"
-if test "x$ac_cv_header_readline_readline_h" = xyes; then :
-  $as_echo "#define HAVE_READLINE_H 1" >>confdefs.h
-
-else
-   exit
-fi
-
-
-ac_fn_c_check_header_mongrel "$LINENO" "readline/history.h" "ac_cv_header_readline_history_h" "$ac_includes_default"
-if test "x$ac_cv_header_readline_history_h" = xyes; then :
-  $as_echo "#define HAVE_READLINE_HISTORY_H 1" >>confdefs.h
-
-else
-   exit
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lreadline" >&5
-$as_echo_n "checking for main in -lreadline... " >&6; }
-if ${ac_cv_lib_readline_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lreadline  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_readline_main=yes
-else
-  ac_cv_lib_readline_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_readline_main" >&5
-$as_echo "$ac_cv_lib_readline_main" >&6; }
-if test "x$ac_cv_lib_readline_main" = xyes; then :
-   LIBS="$LIBS -lreadline"
-else
-   exit
-fi
-ac_cv_lib_readline=ac_cv_lib_readline_main
-
-
 ###########################################################################
 # libcurses
 ###########################################################################
@@ -3591,7 +3565,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cursesw_main" >&5
 $as_echo "$ac_cv_lib_cursesw_main" >&6; }
 if test "x$ac_cv_lib_cursesw_main" = xyes; then :
-   LIBS="$LIBS -lcursesw"; NCURSES_OK2=1
+   LIBS="$LIBS -lcursesw"; $as_echo "#define HAVE_LIB_CURSESW 1" >>confdefs.h
+ NCURSES_OK2=1
 fi
 ac_cv_lib_cursesw=ac_cv_lib_cursesw_main
 
@@ -3626,7 +3601,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ncursesw_main" >&5
 $as_echo "$ac_cv_lib_ncursesw_main" >&6; }
 if test "x$ac_cv_lib_ncursesw_main" = xyes; then :
-   LIBS="$LIBS -lncursesw"; NCURSES_OK2=1
+   LIBS="$LIBS -lncursesw"; $as_echo "#define HAVE_LIB_CURSESW 1" >>confdefs.h
+ NCURSES_OK2=1
 fi
 ac_cv_lib_ncursesw=ac_cv_lib_ncursesw_main
 
@@ -3742,24 +3718,6 @@ fi
 
 
 
-##########################################################################
-# migemo for cygwin
-##########################################################################
-if test $ENABLE_MIGEMO = 1
-then
-    if test "$OS" = CYGWIN
-    then
-        ac_fn_c_check_header_mongrel "$LINENO" "migemo.h" "ac_cv_header_migemo_h" "$ac_includes_default"
-if test "x$ac_cv_header_migemo_h" = xyes; then :
-  LIBS="$LIBS -lmigemo"
-else
-   exit
-fi
-
-
-    fi
-fi
-
 ####################################################################
 # iconv settings
 ####################################################################
@@ -3776,6 +3734,22 @@ fi
 if test "$OS" = CYGWIN|| test "$OS" = DARWIN || test "$OS" = FREEBSD
 then
     LIBS="$LIBS -liconv"
+fi
+
+##########################################################################
+# migemo
+###########################################################################
+if test $ENABLE_MIGEMO = 1
+then
+    ac_fn_c_check_header_mongrel "$LINENO" "migemo.h" "ac_cv_header_migemo_h" "$ac_includes_default"
+if test "x$ac_cv_header_migemo_h" = xyes; then :
+  LIBS="$LIBS -lmigemo"; $as_echo "#define HAVE_MIGEMO_H 1" >>confdefs.h
+
+else
+   exit
+fi
+
+
 fi
 
 
@@ -4487,7 +4461,7 @@ do
     "src/config.h") CONFIG_HEADERS="$CONFIG_HEADERS src/config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
 
-  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5 ;;
+  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
 done
 
@@ -4804,7 +4778,7 @@ do
   esac
   case $ac_mode$ac_tag in
   :[FHL]*:*);;
-  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5 ;;
+  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5;;
   :[FH]-) ac_tag=-:-;;
   :[FH]*) ac_tag=$ac_tag:$ac_tag.in;;
   esac
@@ -4832,7 +4806,7 @@ do
 	   [\\/$]*) false;;
 	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
 	   esac ||
-	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5 ;;
+	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5;;
       esac
       case $ac_f in *\'*) ac_f=`$as_echo "$ac_f" | sed "s/'/'\\\\\\\\''/g"`;; esac
       as_fn_append ac_file_inputs " '$ac_f'"
@@ -4859,7 +4833,7 @@ $as_echo "$as_me: creating $ac_file" >&6;}
 
     case $ac_tag in
     *:-:* | *:-) cat >"$ac_tmp/stdin" \
-      || as_fn_error $? "could not create $ac_file" "$LINENO" 5  ;;
+      || as_fn_error $? "could not create $ac_file" "$LINENO" 5 ;;
     esac
     ;;
   esac

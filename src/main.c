@@ -52,6 +52,28 @@ char gHomeDir[PATH_MAX];         // home directory path
 ///////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////
+static void input_utf8(int meta, int* key, int key_size)
+{
+    if(*key == 26) {         // CTRL-Z
+        endwin();
+        mreset_tty();
+        kill(getpid(), SIGSTOP);
+        xinitscr();
+    }
+    /// menu ///
+    else if(gActiveMenu) {
+        menu_input(meta, key[0]);
+    }
+    /// incremental search ///
+    else if(gISearch) {
+        isearch_input(meta, key, key_size);
+    }
+    /// filer ///
+    else {
+        filer_input(meta, key[0]);
+    }
+}
+
 static void input(int meta, int key)
 {
     if(key == 26) {         // CTRL-Z
@@ -66,7 +88,11 @@ static void input(int meta, int key)
     }
     /// incremental search ///
     else if(gISearch) {
-        isearch_input(meta, key);
+        int keybuf[2];
+        keybuf[0] = key;
+        keybuf[1] = 0;
+        int key_size = 1;
+        isearch_input(meta, keybuf, key_size);
     }
     /// filer ///
     else {
@@ -233,303 +259,308 @@ static void set_mfenv()
 
     char buf[128];
 
+
+    sObject* keycode = UOBJECT_NEW_GC(8, gMFiler4, "keycode", TRUE);
+    uobject_init(keycode);
+    uobject_put(gMFiler4, "keycode", keycode);
+
     snprintf(buf, 128, "%d", KEY_UP);
-    uobject_put(gMFiler4, "key_up", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "up", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_RIGHT);
-    uobject_put(gMFiler4, "key_right", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "right", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_DOWN);
-    uobject_put(gMFiler4, "key_down", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "down", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_LEFT);
-    uobject_put(gMFiler4, "key_left", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "left", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_IC);
-    uobject_put(gMFiler4, "key_insert", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "insert", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_DC);
-    uobject_put(gMFiler4, "key_delete2", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "delete2", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", 127);
-    uobject_put(gMFiler4, "key_delete", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "delete", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_HOME);
-    uobject_put(gMFiler4, "key_home", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "home", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_END);
-    uobject_put(gMFiler4, "key_end", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "end", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_PPAGE);
-    uobject_put(gMFiler4, "key_pageup", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "pageup", STRING_NEW_GC(buf, TRUE));
     snprintf(buf, 128, "%d", KEY_NPAGE);
-    uobject_put(gMFiler4, "key_pagedown", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "pagedown", STRING_NEW_GC(buf, TRUE));
 
     snprintf(buf,128, "%d", 10);
-    uobject_put(gMFiler4, "key_enter", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "enter", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_BACKSPACE);
-    uobject_put(gMFiler4, "key_backspace", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "backspace", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(1));
-    uobject_put(gMFiler4, "key_f1", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f1", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(2));
-    uobject_put(gMFiler4, "key_f2", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f2", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(3));
-    uobject_put(gMFiler4, "key_f3", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f3", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(4));
-    uobject_put(gMFiler4, "key_f4", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f4", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(5));
-    uobject_put(gMFiler4, "key_f5", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f5", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(6));
-    uobject_put(gMFiler4, "key_f6", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f6", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(7));
-    uobject_put(gMFiler4, "key_f7", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f7", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(8));
-    uobject_put(gMFiler4, "key_f8", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f8", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(9));
-    uobject_put(gMFiler4, "key_f9", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f9", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(10));
-    uobject_put(gMFiler4, "key_f10", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f10", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(11));
-    uobject_put(gMFiler4, "key_f11", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f11", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", KEY_F(12));
-    uobject_put(gMFiler4, "key_f12", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f12", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'a');
-    uobject_put(gMFiler4, "key_a", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "a", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'b');
-    uobject_put(gMFiler4, "key_b", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "b", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'c');
-    uobject_put(gMFiler4, "key_c", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "c", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'd');
-    uobject_put(gMFiler4, "key_d", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "d", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'e');
-    uobject_put(gMFiler4, "key_e", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "e", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'f');
-    uobject_put(gMFiler4, "key_f", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "f", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'g');
-    uobject_put(gMFiler4, "key_g", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "g", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'h');
-    uobject_put(gMFiler4, "key_h", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "h", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'i');
-    uobject_put(gMFiler4, "key_i", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "i", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'j');
-    uobject_put(gMFiler4, "key_j", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "j", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'k');
-    uobject_put(gMFiler4, "key_k", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "k", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'l');
-    uobject_put(gMFiler4, "key_l", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "l", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'm');
-    uobject_put(gMFiler4, "key_m", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "m", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'n');
-    uobject_put(gMFiler4, "key_n", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "n", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'o');
-    uobject_put(gMFiler4, "key_o", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "o", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'p');
-    uobject_put(gMFiler4, "key_p", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "p", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'q');
-    uobject_put(gMFiler4, "key_q", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "q", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'r');
-    uobject_put(gMFiler4, "key_r", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "r", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 's');
-    uobject_put(gMFiler4, "key_s", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "s", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 't');
-    uobject_put(gMFiler4, "key_t", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "t", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'u');
-    uobject_put(gMFiler4, "key_u", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "u", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'v');
-    uobject_put(gMFiler4, "key_v", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "v", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'w');
-    uobject_put(gMFiler4, "key_w", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "w", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'x');
-    uobject_put(gMFiler4, "key_x", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "x", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'y');
-    uobject_put(gMFiler4, "key_y", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "y", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'z');
-    uobject_put(gMFiler4, "key_z", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "z", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'A');
-    uobject_put(gMFiler4, "key_A", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "A", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'B');
-    uobject_put(gMFiler4, "key_B", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "B", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'C');
-    uobject_put(gMFiler4, "key_C", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "C", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'D');
-    uobject_put(gMFiler4, "key_D", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "D", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'E');
-    uobject_put(gMFiler4, "key_E", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "E", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'F');
-    uobject_put(gMFiler4, "key_F", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "F", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'G');
-    uobject_put(gMFiler4, "key_G", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "G", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'H');
-    uobject_put(gMFiler4, "key_H", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "H", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'I');
-    uobject_put(gMFiler4, "key_I", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "I", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'J');
-    uobject_put(gMFiler4, "key_J", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "J", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'K');
-    uobject_put(gMFiler4, "key_K", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "K", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'L');
-    uobject_put(gMFiler4, "key_L", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "L", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'M');
-    uobject_put(gMFiler4, "key_M", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "M", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'N');
-    uobject_put(gMFiler4, "key_N", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "N", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'O');
-    uobject_put(gMFiler4, "key_O", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "O", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'P');
-    uobject_put(gMFiler4, "key_P", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "P", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'Q');
-    uobject_put(gMFiler4, "key_Q", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "Q", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'R');
-    uobject_put(gMFiler4, "key_R", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "R", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'S');
-    uobject_put(gMFiler4, "key_S", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "S", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'T');
-    uobject_put(gMFiler4, "key_T", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "T", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'U');
-    uobject_put(gMFiler4, "key_U", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "U", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'V');
-    uobject_put(gMFiler4, "key_V", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "V", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'W');
-    uobject_put(gMFiler4, "key_W", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "W", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'X');
-    uobject_put(gMFiler4, "key_X", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "X", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'Y');
-    uobject_put(gMFiler4, "key_Y", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "Y", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 'Z');
-    uobject_put(gMFiler4, "key_Z", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "Z", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 32);
-    uobject_put(gMFiler4, "key_space", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "space", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 1);
-    uobject_put(gMFiler4, "key_ctrl_a", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_a", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 2);
-    uobject_put(gMFiler4, "key_ctrl_b", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_b", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 3);
-    uobject_put(gMFiler4, "key_ctrl_c", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_c", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 4);
-    uobject_put(gMFiler4, "key_ctrl_d", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_d", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 5);
-    uobject_put(gMFiler4, "key_ctrl_e", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_e", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 6);
-    uobject_put(gMFiler4, "key_ctrl_f", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_f", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 7);
-    uobject_put(gMFiler4, "key_ctrl_g", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_g", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 8);
-    uobject_put(gMFiler4, "key_ctrl_h", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_h", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 9);
-    uobject_put(gMFiler4, "key_ctrl_i", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_i", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 10);
-    uobject_put(gMFiler4, "key_ctrl_j", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_j", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 11);
-    uobject_put(gMFiler4, "key_ctrl_k", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_k", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 12);
-    uobject_put(gMFiler4, "key_ctrl_l", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_l", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 13);
-    uobject_put(gMFiler4, "key_ctrl_m", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_m", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 14);
-    uobject_put(gMFiler4, "key_ctrl_n", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_n", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 15);
-    uobject_put(gMFiler4, "key_ctrl_o", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_o", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 16);
-    uobject_put(gMFiler4, "key_ctrl_p", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_p", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 17);
-    uobject_put(gMFiler4, "key_ctrl_q", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_q", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 18);
-    uobject_put(gMFiler4, "key_ctrl_r", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_r", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 19);
-    uobject_put(gMFiler4, "key_ctrl_s", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_s", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 20);
-    uobject_put(gMFiler4, "key_ctrl_t", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_t", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 21);
-    uobject_put(gMFiler4, "key_ctrl_u", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_u", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 22);
-    uobject_put(gMFiler4, "key_ctrl_v", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_v", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 23);
-    uobject_put(gMFiler4, "key_ctrl_w", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_w", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 24);
-    uobject_put(gMFiler4, "key_ctrl_x", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_x", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 25);
-    uobject_put(gMFiler4, "key_ctrl_y", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_y", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 26);
-    uobject_put(gMFiler4, "key_ctrl_z", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "ctrl_z", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 27);
-    uobject_put(gMFiler4, "key_escape", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "escape", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", 9);
-    uobject_put(gMFiler4, "key_tab", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "tab", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '0');
-    uobject_put(gMFiler4, "key_0", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "0", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '1');
-    uobject_put(gMFiler4, "key_1", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "1", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '2');
-    uobject_put(gMFiler4, "key_2", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "2", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '3');
-    uobject_put(gMFiler4, "key_3", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "3", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '4');
-    uobject_put(gMFiler4, "key_4", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "4", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '5');
-    uobject_put(gMFiler4, "key_5", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "5", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '6');
-    uobject_put(gMFiler4, "key_6", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "6", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '7');
-    uobject_put(gMFiler4, "key_7", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "7", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '8');
-    uobject_put(gMFiler4, "key_8", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "8", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '9');
-    uobject_put(gMFiler4, "key_9", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "9", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '!');
-    uobject_put(gMFiler4, "key_exclam", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "exclam", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '"');
-    uobject_put(gMFiler4, "key_dquote", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "dquote", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '#');
-    uobject_put(gMFiler4, "key_sharp", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "sharp", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '$');
-    uobject_put(gMFiler4, "key_dollar", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "dollar", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '%');
-    uobject_put(gMFiler4, "key_percent", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "percent", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '&');
-    uobject_put(gMFiler4, "key_and", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "and", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '\'');
-    uobject_put(gMFiler4, "key_squote", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "squote", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '(');
-    uobject_put(gMFiler4, "key_lparen", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "lparen", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", ')');
-    uobject_put(gMFiler4, "key_rparen", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "rparen", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '~');
-    uobject_put(gMFiler4, "key_tilda", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "tilda", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '=');
-    uobject_put(gMFiler4, "key_equal", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "equal", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '-');
-    uobject_put(gMFiler4, "key_minus", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "minus", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '^');
-    uobject_put(gMFiler4, "key_cup", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "cup", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '|');
-    uobject_put(gMFiler4, "key_vbar", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "vbar", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '\\');
-    uobject_put(gMFiler4, "key_backslash", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "backslash", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '@');
-    uobject_put(gMFiler4, "key_atmark", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "atmark", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '`');
-    uobject_put(gMFiler4, "key_bapostrophe", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "bapostrophe", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '{');
-    uobject_put(gMFiler4, "key_lcurly", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "lcurly", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '[');
-    uobject_put(gMFiler4, "key_lbrack", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "lbrack", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '+');
-    uobject_put(gMFiler4, "key_plus", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "plus", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", ';');
-    uobject_put(gMFiler4, "key_semicolon", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "semicolon", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '*');
-    uobject_put(gMFiler4, "key_star", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "star", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", ':');
-    uobject_put(gMFiler4, "key_colon", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "colon", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '}');
-    uobject_put(gMFiler4, "key_rcurly", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "rcurly", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", ']');
-    uobject_put(gMFiler4, "key_rbrack", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "rbrack", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '<');
-    uobject_put(gMFiler4, "key_lss", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "lss", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", ',');
-    uobject_put(gMFiler4, "key_comma", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "comma", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '>');
-    uobject_put(gMFiler4, "key_gtr", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "gtr", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '.');
-    uobject_put(gMFiler4, "key_dot", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "dot", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '/');
-    uobject_put(gMFiler4, "key_slash", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "slash", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '?');
-    uobject_put(gMFiler4, "key_qmark", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "qmark", STRING_NEW_GC(buf, TRUE));
     snprintf(buf,128, "%d", '_');
-    uobject_put(gMFiler4, "key_underbar", STRING_NEW_GC(buf, TRUE));
+    uobject_put(keycode, "underbar", STRING_NEW_GC(buf, TRUE));
 
     snprintf(buf,128, "%d", 0);
     setenv("nometa", buf, 1);
@@ -628,12 +659,100 @@ void extname(char* result, int result_size, char* name)
     xstrncpy(result, "", result_size);
 }
 
+static int gMainResult;
+
+static void temulator_fun(void* arg)
+{
+    /// start curses ///
+    xinitscr();
+
+    /// main loop ///
+    fd_set mask;
+    fd_set read_ok;
+
+    FD_ZERO(&mask);
+    FD_SET(0, &mask);
+
+    while(gMainLoop == -1) {
+        /// drawing ///
+        xclear();
+        view();
+        refresh();
+
+        const int maxy = mgetmaxy();
+        mmove_immediately(maxy-2, 0);
+
+        /// select for waiting to input ///
+        read_ok = mask;
+        if(xyzsh_job_num() > 0) {
+            struct timeval tv;
+            tv.tv_sec = 5;
+            tv.tv_usec = 0;
+
+            select(5, &read_ok, NULL, NULL, &tv);
+        }
+        else {
+            select(5, &read_ok, NULL, NULL, NULL);
+        }
+
+        /// input ///
+#ifdef HAVE_LIB_CURSESW
+        if(FD_ISSET(0, &read_ok)) {
+            int meta;
+            int* key;
+            int key_size;
+            xgetch_utf8(&meta, ALLOC &key, &key_size);
+
+            input_utf8(meta, key, key_size);
+
+            FREE(key);
+        }
+#else
+        if(FD_ISSET(0, &read_ok)) {
+            int meta;
+            int key = xgetch(&meta);
+
+            input(meta, key);
+        }
+#endif
+
+        /// works to background jobs ///
+        xyzsh_wait_background_job();
+    }
+
+    /// end curses ///
+    endwin();
+
+    /// kill all jobs ///
+    xyzsh_kill_all_jobs();
+
+    /// finalization for modules ///
+    isearch_final();
+    menu_final();
+    filer_final();
+    xyzsh_final();
+    commands_final();
+
+    mreset_tty();
+    //mrestore_ttysettings();
+
+    /// checking memory leaks ///
+    CHECKML_END();
+
+    /// puts ///
+    puts("");
+
+    mreset_tty();
+
+    gMainResult = gMainLoop;
+}
+
 int main(int argc, char* argv[])
 {
-    CHECKML_BEGIN(FALSE);    // start to watch memory leak
+    CHECKML_BEGIN();    // start to watch memory leak
 
     /// initialization for envronment variable ///
-    setenv("VERSION", "1.1.6", 1);
+    setenv("VERSION", "1.2.3", 1);
     setenv("MFILER4_DOCDIR", DOCDIR, 1);
     setenv("MFILER4_DATAROOTDIR", DOCDIR, 1);
 
@@ -703,6 +822,10 @@ int main(int argc, char* argv[])
                     else {
                         usage();
                     }
+                    break;
+
+                case 'x':
+                    setenv("MFILER4_CLEAR_WAY", "1", 1);
                     break;
 
                 default:
@@ -813,7 +936,12 @@ int main(int argc, char* argv[])
 
     /// signal ///
     set_signal_mfiler();
-    
+
+    /// start curses ///
+//    xinitscr();
+
+    //run_on_temulator(temulator_fun, NULL);
+
     /// start curses ///
     xinitscr();
 
@@ -847,12 +975,25 @@ int main(int argc, char* argv[])
         }
 
         /// input ///
+#ifdef HAVE_LIB_CURSESW
+        if(FD_ISSET(0, &read_ok)) {
+            int meta;
+            int* key;
+            int key_size;
+            xgetch_utf8(&meta, ALLOC &key, &key_size);
+
+            input_utf8(meta, key, key_size);
+
+            FREE(key);
+        }
+#else
         if(FD_ISSET(0, &read_ok)) {
             int meta;
             int key = xgetch(&meta);
 
             input(meta, key);
         }
+#endif
 
         /// works to background jobs ///
         xyzsh_wait_background_job();

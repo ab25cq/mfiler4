@@ -8,6 +8,7 @@ CFLAGS=@CFLAGS@ -Werror
 LIBS=@LIBS@
 OBJ=src/filer.o src/file.o src/isearch.o src/menu.o src/gui.o src/commands.o src/dir.o
 DESTDIR=
+SYSTEM_MIGEMODIR=@SYSTEM_MIGEMODIR@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@

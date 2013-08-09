@@ -73,56 +73,56 @@ mfiler3 inner command
 
 
 keycode
-    $key_up 
-    $key_right 
-    $key_down 
-    $key_left 
-    $key_insert 
-    $key_delete 
-    $key_delete2 
-    $key_home 
-    $key_end 
-    $key_pageup 
-    $key_pagedown 
-    $key_enter 
-    $key_backspace 
-    $key_f1, key_f12
-    $key_a,..., key_z
-    $key_A, ..., key_Z
-    $key_space 
-    $key_ctrl_a, key_ctrl_z
-    $key_escape 
-    $key_tab 
-    $key_0,...,key_9
-    $key_exclam 
-    $key_dquote 
-    $key_sharp 
-    $key_dollar 
-    $key_percent 
-    $key_and
-    $key_squote 
-    $key_lparen 
-    $key_rparen 
-    $key_tilda 
-    $key_equal 
-    $key_minus 
-    $key_cup 
-    $key_vbar 
-    $key_backslash 
-    $key_atmark 
-    $key_bapostrophe 
-    $key_lcurly 
-    $key_lbrack 
-    $key_plus 
-    $key_semicolon 
-    $key_star 
-    $key_colon 
-    $key_rcurly 
-    $key_rbrack 
-    $key_lss 
-    $key_comma 
-    $key_gtr 
-    $key_dot 
-    $key_slash 
-    $key_qmark 
-    $key_underbar 
+    $keycode::up 
+    $keycode::right 
+    $keycode::down 
+    $keycode::left 
+    $keycode::insert 
+    $keycode::delete 
+    $keycode::delete2 
+    $keycode::home 
+    $keycode::end 
+    $keycode::pageup 
+    $keycode::pagedown 
+    $keycode::enter 
+    $keycode::backspace 
+    $keycode::f1, keycode::f12
+    $keycode::a,..., keycode::z
+    $keycode::A, ..., keycode::Z
+    $keycode::space 
+    $keycode::ctrl_a, keycode::ctrl_z
+    $keycode::escape 
+    $keycode::tab 
+    $keycode::0,...,keycode::9
+    $keycode::exclam 
+    $keycode::dquote 
+    $keycode::sharp 
+    $keycode::dollar 
+    $keycode::percent 
+    $keycode::and
+    $keycode::squote 
+    $keycode::lparen 
+    $keycode::rparen 
+    $keycode::tilda 
+    $keycode::equal 
+    $keycode::minus 
+    $keycode::cup 
+    $keycode::vbar 
+    $keycode::backslash 
+    $keycode::atmark 
+    $keycode::bapostrophe 
+    $keycode::lcurly 
+    $keycode::lbrack 
+    $keycode::plus 
+    $keycode::semicolon 
+    $keycode::star 
+    $keycode::colon 
+    $keycode::rcurly 
+    $keycode::rbrack 
+    $keycode::lss 
+    $keycode::comma 
+    $keycode::gtr 
+    $keycode::dot 
+    $keycode::slash 
+    $keycode::qmark 
+    $keycode::underbar 

@@ -1,6 +1,7 @@
 mfiler4
 
-This program is a 2pain file manager with a embedded shell scripting system "xyzsh" under linux, OSX, cygwin, and FreeBSD.
+What's this?
+    2pain console file manager with xyzsh shell script language. This features wide variety file view and file sort mode, virtual directory with find or grep, and seamless cooperation with xyzsh interactive shell. You can run bash or Finder or natilus from this. 
 
 Attension
     Use this on your responsibility. I can't take the responsibility on your works with this program. 
@@ -27,11 +28,8 @@ How do I compile this?
     the configure options are 
 
     --prefix --> installed directory.
-    --with-migemo --> enable C/Migemo
     --with-optimize --> enable optimize code. 
     --with-onig-dir --> oniguruma installed directory which is prefix of oniguruma.
-    --with-migemo-dir --> C/Migemo installed directory
-    --with-system-migemo-dir --> C/Migemo dictonary directory
     --with-xyzsh-dir xyzsh installed directory which is prefix of xyzsh.
     --with-debug --> use debug mode. you can detect memory leaks and debug with gdb.
     --with-gprof-debug --> use gprof debug mode. you can profile mfiler4 with gprof
@@ -57,6 +55,9 @@ used files by mfiler4
     ~/.xyzsh/jump --> jump inner command uses this file
     ~/.xyzsh/menu --> menu inner command uses this file
     ~/.xyzsh/program --> program lists for omiting sys:: prefix for external program
+
+Option
+    -x When refreshing screeen, use "erase" function. This may hold down filicker in screen.
 
 USAGE
     when running mfiler4, hit ?

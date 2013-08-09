@@ -31,10 +31,12 @@ void xendwin()
 
 void xstart_color()
 {
-    int background = COLOR_BLACK;
+    int background = -1;
 
     if(has_colors()) {
         if(start_color() == OK) {
+            use_default_colors();
+
             init_pair(1, COLOR_WHITE, background);
             init_pair(2, COLOR_BLUE, background);
             init_pair(3, COLOR_CYAN, background);
@@ -78,6 +80,78 @@ int xgetch(int* meta)
     }
 }
 
+void xgetch_utf8(int* meta, ALLOC int** key, int* key_size)
+{
+    fd_set mask;
+    fd_set read_ok;
+
+    FD_ZERO(&mask);
+    FD_SET(0, &mask);
+
+    *key = MALLOC(sizeof(int)*128);
+    *key_size = 0;
+    int key_alloc_size = 128;
+
+    BOOL input_started = FALSE;
+
+    while(1) {
+        read_ok = mask;
+
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        select(5, &read_ok, NULL, NULL, &tv);
+
+        if(FD_ISSET(0, &read_ok)) {
+            input_started = TRUE;
+
+            int k = getch();
+
+            if(k == 27) {
+                k = getch();
+
+                *meta = 1;
+                (*key)[0] = k;
+                (*key)[1] = 0;
+                *key_size = 1;
+
+                return;
+            }
+            else if(k >= KEY_MIN && k <= KEY_MAX) { // curses key
+                *meta = 0;
+                (*key)[0] = k;
+                (*key)[1] = 0;
+                *key_size = 1;
+
+                return;
+            }
+            else if(k >= 128) { // utf8 characters
+                if(*key_size >= key_alloc_size) {
+                    key_alloc_size *= 2;
+                    *key = REALLOC(*key, sizeof(int)*key_alloc_size);
+                }
+                (*key)[(*key_size)++] = k;
+                (*key)[*key_size] = 0;
+            }
+            else {
+                *meta = 0;
+                (*key)[0] = k;
+                (*key)[1] = 0;
+                *key_size = 1;
+
+                return;
+            }
+        }
+        else {
+            if(input_started) {
+                *meta = 0;
+                return;
+            }
+        }
+    }
+}
+
 ///////////////////////////////////////////////////
 // エラーメッセージ表示
 ///////////////////////////////////////////////////
@@ -94,10 +168,10 @@ void merr_msg(char* msg, ...)
         const int maxx = mgetmaxx();
 
         if(mis_raw_mode()) {
-            clear();
+            xclear();
             view();
             mclear_online(maxy-2);
-            mclear_online(maxy-1);
+            mclear_lastline();
             mvprintw(maxy-2, 0, "%s", msg2);
             refresh();
 
@@ -142,7 +216,7 @@ void msg_nonstop(char* msg, ...)
     xclear();
     view();
     mclear_online(maxy-2);
-    mclear_online(maxy-1);
+    mclear_lastline();
     mvprintw(maxy-2, 0, "%s", msg2);
     refresh();
 }
@@ -163,7 +237,7 @@ char* choise(char* msg, char* str[], int len, int cancel)
         view();
 
         mclear_online(maxy-2);
-        mclear_online(maxy-1);
+        mclear_lastline();
 
         move(maxy-2, 0);
         printw("%s", msg);
@@ -181,9 +255,7 @@ char* choise(char* msg, char* str[], int len, int cancel)
                 printw("%s ", str[i]);
             }
         }
-        move(maxy-1, maxx-2);
         refresh();
-
 
         /// input ///
         int meta;
@@ -251,7 +323,7 @@ void input_box_view()
 
     /// view ///
     mclear_online(maxy-2);
-    mclear_online(maxy-1);
+    mclear_lastline();
     
     mvprintw(maxy-2, 0, "%s", gInputBoxMsg);
     
@@ -279,7 +351,9 @@ int input_box(char* msg, char* result, int result_size, char* def_input, int def
     gView = input_box_view;
     
     while(1) {
-        input_box_view();
+        xclear();
+        view();
+        //input_box_view();
         refresh();
 
         /// input ///
@@ -453,7 +527,7 @@ void select_str_view()
     
     /// view ///
     mclear_online(maxy-2);
-    mclear_online(maxy-1);
+    mclear_lastline();
 
     move(maxy-2, 0);
     printw("%s", gSelectStrMsg);
@@ -473,7 +547,7 @@ void select_str_view()
         }
     }
 
-    move(maxy-1, maxx-2);
+    //move(maxy-2, 0);
 }
 
 int select_str(char* msg, char* str[], int len, int cancel)
@@ -487,9 +561,11 @@ int select_str(char* msg, char* str[], int len, int cancel)
     gView = select_str_view;
     
     while(1) {
-        filer_view(0);
-        filer_view(1);
-        select_str_view();
+        xclear();
+        view();
+        //filer_view(0);
+        //filer_view(1);
+        //select_str_view();
         refresh();
 
         /// input ///
@@ -546,10 +622,11 @@ int select_str2(char* msg, char* str[], int len, int cancel)
     
     gSelectStrCursor = 0;
     
-    gView = select_str_view;
+    //gView = select_str_view;
     
     while(1) {
-        select_str_view();
+        xclear();
+        view(); //select_str_view();
         refresh();
 
         /// input ///
@@ -630,9 +707,6 @@ void mclear_lastline()
 
 void xclear()
 {
-//#ifndef __CYGWIN__
-//#define __CYGWIN__
-//#endif
 #if defined(__CYGWIN__)
     int y;
     for(y=0; y<mgetmaxy()-1; y++) {
@@ -640,7 +714,17 @@ void xclear()
     }
     mclear_lastline();
 #else
-    clear();
+    if(getenv("MFILER4_CLEAR_WAY")) {
+        int y;
+        for(y=0; y<mgetmaxy()-1; y++) {
+            mclear_online(y);
+        }
+        mclear_lastline();
+        //erase();
+    }
+    else {
+        clear();
+    }
 #endif
 }
 
@@ -649,3 +733,32 @@ void gui_init()
     gInputBoxInput = STRING_NEW_STACK("");
 }
 
+void mbox(int y, int x, int width, int height)
+{
+   char hbar[256];
+   int i;
+
+   hbar[0] = '+';
+   for(i=1; i<width-1; i++) {
+      hbar[i] = '-';
+   }
+   hbar[i] = '+';
+   hbar[i+1] = 0;
+
+   mvprintw(y, x, hbar);
+   for(i=0; i<height-2; i++) {
+       char hbar2[256];
+
+       int j;
+       hbar2[0] = '|';
+       for(j=1; j<width-1; j++) {
+           hbar2[j] = ' ';
+       }
+       hbar2[j] = '|';
+       hbar2[j+1] = 0;
+
+       mvprintw(y + 1 +i, x, hbar2);
+   }
+
+   mvprintw(y + height-1, x, hbar);
+}

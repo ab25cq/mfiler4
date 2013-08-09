@@ -80,19 +80,19 @@ BOOL sKeyCommand_mainfun(void* obj, sObject* nextin, sObject* nextout, sRunInfo*
             char buf[256];
             snprintf(buf, 256, "-+- key %d meta %d external %d -+-", i%kKeyMetaFirst, i>= kKeyMetaFirst ? 1:0, external);
             if(!fd_write(nextout, buf, strlen(buf))) {
-                err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("interrupt", runinfo->mSName, runinfo->mSLine);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
 
             if(!fd_write(nextout, SBLOCK(block).mSource, strlen(SBLOCK(block).mSource)))
             {
-                err_msg("signal interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("signal interrupt", runinfo->mSName, runinfo->mSLine);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
             if(!fd_write(nextout, "\n", 1)) {
-                err_msg("signal interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+                err_msg("signal interrupt", runinfo->mSName, runinfo->mSLine);
                 runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
                 return FALSE;
             }
@@ -359,7 +359,7 @@ BOOL filer_add_history(int dir, char* path)
 // result --> vector_obj of string_obj
 BOOL filer_get_hitory(sObject* result, int dir)
 {
-    ASSERT(TYPE(result) == T_VECTOR);
+    ASSERT(STYPE(result) == T_VECTOR);
 
     if(dir < 0 || dir >= vector_count(gDirs)) {
         return FALSE;
@@ -894,7 +894,7 @@ void filer_input(int meta, int key)
         if(external) {
             const int maxy = mgetmaxy();
             mclear_online(maxy-1);
-            mclear_online(maxy-2);
+            mclear_lastline();
             refresh();
             mmove_immediately(maxy-2, 0);
             endwin();
@@ -2580,7 +2580,7 @@ void cmdline_view_filer()
         mvprintw(maxy-1, 0, "%s", buf2);
     }
 
-    move(maxy-1, maxx-2);
+    move(maxy-1, 0);
 }
 
 int filer_line(int dir)

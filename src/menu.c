@@ -101,7 +101,7 @@ BOOL sMenu_mainfun(void* obj, sObject* nextin, sObject* nextout, sRunInfo* runin
         }
 
         if(!fd_write(nextout, buf, strlen(buf))) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -110,12 +110,12 @@ BOOL sMenu_mainfun(void* obj, sObject* nextin, sObject* nextout, sRunInfo* runin
         char* source = SBLOCK(block).mSource;
 
         if(!fd_write(nextout, source, strlen(source))) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
-            err_msg("interrupt", runinfo->mSName, runinfo->mSLine, command->mArgs[0]);
+            err_msg("interrupt", runinfo->mSName, runinfo->mSLine);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
             return FALSE;
         }
@@ -406,6 +406,6 @@ void menu_view()
             }
         }
 
-        move(maxy-1, maxx-2);
+        move(maxy-1, 0);
     }
 }

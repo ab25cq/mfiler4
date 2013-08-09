@@ -44,6 +44,8 @@
 #define FORMAT_HARDLINK "%3d"
 #endif
 
+#define kKeyMetaFirst 128
+
 //////////////////////////////////////////////
 // main.c
 ///////////////////////////////////////////////
@@ -83,7 +85,7 @@ extern BOOL gISearch;        // インクリメンタルサーチ中かどうか
 void isearch_init();         // インクリメンタルサーチ初期化
 void isearch_final();        // インクリメンタルサーチ解放
 
-void isearch_input(int meta, int key); // インクリメンタルサーチキー入力
+void isearch_input(int meta, int* keybuf, int keybuf_size);
 void isearch_view();                  // インクリメンタルサーチ描写
 
 BOOL IsISearchExploreChar(int meta, int key);
@@ -194,6 +196,7 @@ void gui_init();
 
 void xstart_color();
 int xgetch(int* meta);
+void xgetch_utf8(int* meta, ALLOC int** key, int* key_size);
 void xinitscr();
 void xendwin();
 void xclear();
@@ -205,6 +208,7 @@ void msg_nonstop(char* msg, ...);
 int select_str(char* msg, char* str[], int len, int cancel);
 int select_str2(char* msg, char* str[], int len, int cancel);
 int input_box(char* msg, char* result, int result_size, char* def_input, int def_cursor);
+void mbox(int y, int x, int width, int height);
 
 ///////////////////////////////////////////////////
 // commands.c

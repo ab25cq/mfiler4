@@ -1,4 +1,108 @@
 
+2013 6th of August version 1.2.3
+
+    1. Changed the way of screen refresh.
+
+    2. Made "-x" option for screen refreshing.
+
+    require xyzsh version 1.4.7 later
+
+2013 8月6日 version 1.2.2
+
+    1. 画面の更新方法を変えました。
+
+    2. -xオプションを作りました。-xオプションを使うと画面のリフレッシュにeraseを使います。もしかしたら、画面のちらつきが抑えられるかもしれません。
+
+    require xyzsh version 1.4.7 later
+
+2013 6th of August version 1.2.2
+
+    1. Changed the way of screen refresh.
+
+    require xyzsh version 1.4.7 later
+
+2013 8月6日 version 1.2.2
+
+    1. 画面の更新方法を変えました。
+
+    require xyzsh version 1.4.7 later
+
+2013 version 1.2.1
+
+    1. mfiler4 corresponds xyzsh 1.4.6 later
+
+    2. Corresponded to some terminal emulator.
+
+    3. For Japanses, mfiler4 uses C/Migemo again.
+
+    require xyzsh version 1.4.6 later
+
+2013 version 1.2.1
+
+    1. xyzsh 1.4.6 以上に対応しました。
+
+    2. 端末によっては画面がちらついていたので修正。
+
+    3. 再びmfiler4はC/Migemoに依存するようになりました。（パフォーマンスの問題により) C/Migemoを使ったインクリメンタルサーチを行ないたい場合は./configure --with-migemo --with-system-migemodir=... と指定してください。パフォーマンスは前よりも上がっています。(3文字以上のインクリメンタルサーチじゃないとC/Migemoは使わないため）
+
+    xyzsh 1.4.6以上が必要。
+
+2013 2nd of June version 1.2.0
+
+    1. Changed key variables. It was changed from $mfiler4::key_a,$mfiler4::key_b and $mfiler4::key_up to $mfiler4::keycode::a, $mfiler4::keycode::b and $mfiler4::keycode::up.
+
+    2. Changed $(...) and $$(...) description to correspond to xyzsh version 1.4.3. In xyzsh version 1.4.3, deleted $$(...) description. See CHANGELOG and USAGE of xyzsh.
+
+    require xyzsh version 1.4.3
+
+2013 6月2日 version 1.2.0
+
+    1. キー定義の変数名が変更されています。$mfiler4::key_a, $mfiler4::key_b, $mfiler4::key_upなどでしたが、$mfiler4::keycode::a, $mfiler4::keycode::b, $mfiler4::keycode::upなどと変更されました。
+
+    2. xyzsh 1.4.3で変更された$(...)と$$(...)の記述を変えています。xyzsh 1.4.3に対応しています。$$(...)は無くなりました。詳しくはxyzsh 1.4.3のCHANGELOGやUSAGE.jaを見てください。
+
+    xyzshの1.4.3以上が必要です。
+
+2013 2nd of April version 1.1.9
+
+    1. Fixed bug of incremental search with utf-8 characters.
+
+    require xyzsh version 1.4.2
+
+2013 2nd of April version 1.1.9
+
+    1. migemoが無くても漢字ファイルの検索ができるようになっています。
+
+    xyzsh version 1.4.2以上が必要です。
+
+2013 2nd of April version 1.1.8
+
+    1. Fixed compile error.
+
+    require xyzsh version 1.4.2
+
+2013 2nd of April version 1.1.8
+
+    1. コンパイルエラーを修正。
+
+    xyzsh version 1.4.2以上が必要です。
+
+2013 1st of April version 1.1.7
+
+    1. If mfiler4::quit occurs error, you can't finish mfiler4. I fixed this problem.
+
+    require xyzsh version 1.4.2
+
+2013 1st of April version 1.1.7
+
+    1. quit中にエラーを起こすとmfiler4が終了できないことがありました。
+
+    2. Migemoのインクリメンタルサーチを使うか使わないかを選択できるようになりました。
+
+    3. migemoのcygwinでのサポートを打ち切りました。configureで--with-migemoできません。
+
+    xyzsh version 1.4.2以上が必要です。
+
 2013 16th of March version 1.1.6
 
     require xyzsh version 1.4.1

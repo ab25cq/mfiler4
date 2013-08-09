@@ -21,10 +21,14 @@ AC_ARG_WITH(debug,              [  --with-debug              include debug info 
 AC_ARG_WITH(gprof-debug,        [  --with-gprof-debug        include debug info ], [ DEBUGGING=2; ], [])
 AC_ARG_WITH(optimize,           [  --with-optimize           with optimize flag(-O2) CFLAGS ], [ ENABLE_OPTIMIZE=1 ], [ ENABLE_OPTIMIZE=0 ])
 AC_ARG_WITH(onig-dir,           [  --with-onig-dir=DIR       set oniguruma directory ], [ ONIG_DIR="$with_val"  ], [ ONIG_DIR= ])
-AC_ARG_WITH(migemo,             [  --with-migemo             for cygwin option.  ], [ ENABLE_MIGEMO=1 ], [ ENABLE_MIGEMO=0 ])
-AC_ARG_WITH(xyzsh-dir,        [  --with-xyzsh-dir=DIR    set xyzsh directory ], [ XYZSH_DIR="$with_val"  ], [ XYZSH_DIR= ])
+AC_ARG_WITH(xyzsh-dir,          [  --with-xyzsh-dir=DIR    set xyzsh directory ], [ XYZSH_DIR="$with_val"  ], [ XYZSH_DIR= ])
+AC_ARG_WITH(migemo,             [  --with-migemo             enable migemo for japanese romaji completion ], [ ENABLE_MIGEMO=1 ], [ ENABLE_MIGEMO=0 ])
+AC_ARG_WITH(migemo-dir,         [  --with-migemo-dir=DIR     set migemo install prefix ], [ MIGEMO_DIR="$withval"  ], [ MIGEMO_DIR= ])
+AC_ARG_WITH(system-migemodir,[ --with-system-migemodir       specify the directory of system migemo dictionary. /usr/share/migemo, for example], [ if test -n "$withval"; then echo "system-migemodir = $withval" ; SYSTEM_MIGEMODIR="$withval"; fi ], [ if test -e /usr/local/share/migemo/utf-8/migemo-dict; then SYSTEM_MIGEMODIR=/usr/local/share/migemo; else SYSTEM_MIGEMODIR=/usr/share/cmigemo; fi ] )
 
-CFLAGS='-DSYSCONFDIR="\"${sysconfdir}/\"" -DDOCDIR="\"${docdir}/\""'
+AC_SUBST(SYSTEM_MIGEMODIR)
+
+CFLAGS='-DSYSCONFDIR="\"${sysconfdir}/\"" -DDOCDIR="\"${docdir}/\"" -DSYSTEM_MIGEMODIR="\"${SYSTEM_MIGEMODIR}\""'
 
 if test $DEBUGGING = 1
 then
@@ -77,6 +81,16 @@ then
     fi
 fi
 
+if test -n "$MIGEMO_DIR"
+then
+    if test -e "$MIGEMO_DIR/include/migemo.h" && test -e "$MIGEMO_DIR/lib/libmigemo.so"
+    then
+        CFLAGS="$CFLAGS -I$MIGEMO_DIR/include -L$MIGEMO_DIR/lib"
+    else
+        echo "can't found migemo.h in $MIGEMO_DIR/include or libmigemo.so in $MIGEMO_DIR/lib"
+    fi
+fi
+
 if test $ENABLE_OPTIMIZE = 1
 then
     CFLAGS="$CFLAGS -O3"
@@ -115,20 +129,13 @@ fi
 ###########################################################################
 AC_CHECK_HEADER(xyzsh/xyzsh.h, [ LIBS="$LIBS -lxyzsh"; AC_DEFINE(HAVE_XYZSH_H, 1) ], [ exit ])
 
-######################################################################
-# readline settings
-######################################################################
-AC_CHECK_HEADER(readline/readline.h, [AC_DEFINE(HAVE_READLINE_H, 1)], [ exit ])
-AC_CHECK_HEADER(readline/history.h, [AC_DEFINE(HAVE_READLINE_HISTORY_H, 1)], [ exit ])
-AC_HAVE_LIBRARY(readline, [ LIBS="$LIBS -lreadline" ], [ exit ])
-
 ###########################################################################
 # libcurses
 ###########################################################################
 AC_CHECK_HEADER(ncurses.h, [NCURSES_OK=1; AC_DEFINE(HAVE_NCURSES_H, 1)])
 AC_CHECK_HEADER(ncurses/ncurses.h, [NCURSES_OK=1; AC_DEFINE(HAVE_NCURSES_NCURSES_H, 1)])
-AC_HAVE_LIBRARY(cursesw, [ LIBS="$LIBS -lcursesw"; NCURSES_OK2=1 ])
-AC_HAVE_LIBRARY(ncursesw, [ LIBS="$LIBS -lncursesw"; NCURSES_OK2=1 ])
+AC_HAVE_LIBRARY(cursesw, [ LIBS="$LIBS -lcursesw"; AC_DEFINE(HAVE_LIB_CURSESW, 1) NCURSES_OK2=1 ])
+AC_HAVE_LIBRARY(ncursesw, [ LIBS="$LIBS -lncursesw"; AC_DEFINE(HAVE_LIB_CURSESW, 1) NCURSES_OK2=1 ])
 
 if test -z "$NCURSES_OK2"
 then
@@ -157,17 +164,6 @@ AC_CHECK_HEADER(math.h, [LIBS="$LIBS -lm"; AC_DEFINE(HAVE_MATH_H, 1)], [ exit ])
 ###########################################################################
 AC_CHECK_HEADER(oniguruma.h, [LIBS="$LIBS -lonig"; AC_DEFINE(HAVE_ONIGURUMA_H, 1)], [ exit ])
 
-##########################################################################
-# migemo for cygwin
-##########################################################################
-if test $ENABLE_MIGEMO = 1
-then
-    if test "$OS" = CYGWIN
-    then
-        AC_CHECK_HEADER(migemo.h, [LIBS="$LIBS -lmigemo"], [ exit ])
-    fi
-fi
-
 ####################################################################
 # iconv settings
 ####################################################################
@@ -176,6 +172,14 @@ AC_CHECK_HEADER(iconv.h, [AC_DEFINE(HAVE_ICONV_H, 1)], [ exit ])
 if test "$OS" = CYGWIN|| test "$OS" = DARWIN || test "$OS" = FREEBSD
 then
     LIBS="$LIBS -liconv"
+fi
+
+##########################################################################
+# migemo
+###########################################################################
+if test $ENABLE_MIGEMO = 1
+then
+    AC_CHECK_HEADER(migemo.h, [LIBS="$LIBS -lmigemo"; AC_DEFINE(HAVE_MIGEMO_H, 1)], [ exit ])
 fi
 
 AC_SUBST(LIBS)

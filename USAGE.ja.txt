@@ -96,56 +96,56 @@ meta + r                     ディレクトリを進む
     コマンドラインでhelpを実行してください。
 
 キーコード
-    $key_up 上キー
-    $key_right 右キー
-    $key_down 下キー
-    $key_left 左キー
-    $key_insert インサートキー
-    $key_delete deleteキー
-    $key_delete2 deleteキー2
-    $key_home homeキー
-    $key_end endキー
-    $key_pageup pageupキー
-    $key_pagedown pagedownキー
-    $key_enter ENTERキー
-    $key_backspace BackSpaceキー
-    $key_f1, key_f12) ファンクションキー
-    $key_a,..., key_z) 英字キーa,..z
-    $key_A, ..., key_Z) 英字キーA,...,Z
-    $key_space スペースキー
-    $key_ctrl_a, key_ctrl_z) CTRL+英字キー
-    $key_escape escapeキー
-    $key_tab tabキー
-    $key_0,...,key_9) 数字キー
-    $key_exclam !キー
-    $key_dquote "キー
-    $key_sharp #キー
-    $key_dollar $キー
-    $key_percent %キー
-    $key_and &amp;
-    $key_squote 'キー
-    $key_lparen (キー
-    $key_rparen )キー
-    $key_tilda ~キー
-    $key_equal =キー
-    $key_minus -キー
-    $key_cup ^キー
-    $key_vbar |キー
-    $key_backslash \キー
-    $key_atmark @キー
-    $key_bapostrophe `キー
-    $key_lcurly {キー
-    $key_lbrack [キー
-    $key_plus +キー
-    $key_semicolon ;キー
-    $key_star *キー
-    $key_colon :キー
-    $key_rcurly }キー
-    $key_rbrack ]キー
-    $key_lss &lt;キー
-    $key_comma ,キー
-    $key_gtr &gt;キー
-    $key_dot .キー
-    $key_slash /キー
-    $key_qmark ?キー
-    $key_underbar _キー
+    $keycode::up 上キー
+    $keycode::right 右キー
+    $keycode::down 下キー
+    $keycode::left 左キー
+    $keycode::insert インサートキー
+    $keycode::delete deleteキー
+    $keycode::delete2 deleteキー2
+    $keycode::home homeキー
+    $keycode::end endキー
+    $keycode::pageup pageupキー
+    $keycode::pagedown pagedownキー
+    $keycode::enter ENTERキー
+    $keycode::backspace BackSpaceキー
+    $keycode::f1, keycode::f12) ファンクションキー
+    $keycode::a,..., keycode::z) 英字キーa,..z
+    $keycode::A, ..., keycode::Z) 英字キーA,...,Z
+    $keycode::space スペースキー
+    $keycode::ctrl_a, keycode::ctrl_z) CTRL+英字キー
+    $keycode::escape escapeキー
+    $keycode::tab tabキー
+    $keycode::0,...,keycode::9) 数字キー
+    $keycode::exclam !キー
+    $keycode::dquote "キー
+    $keycode::sharp #キー
+    $keycode::dollar $キー
+    $keycode::percent %キー
+    $keycode::and &amp;
+    $keycode::squote 'キー
+    $keycode::lparen (キー
+    $keycode::rparen )キー
+    $keycode::tilda ~キー
+    $keycode::equal =キー
+    $keycode::minus -キー
+    $keycode::cup ^キー
+    $keycode::vbar |キー
+    $keycode::backslash \キー
+    $keycode::atmark @キー
+    $keycode::bapostrophe `キー
+    $keycode::lcurly {キー
+    $keycode::lbrack [キー
+    $keycode::plus +キー
+    $keycode::semicolon ;キー
+    $keycode::star *キー
+    $keycode::colon :キー
+    $keycode::rcurly }キー
+    $keycode::rbrack ]キー
+    $keycode::lss &lt;キー
+    $keycode::comma ,キー
+    $keycode::gtr &gt;キー
+    $keycode::dot .キー
+    $keycode::slash /キー
+    $keycode::qmark ?キー
+    $keycode::underbar _キー

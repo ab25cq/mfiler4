@@ -1,7 +1,7 @@
 このプログラムについて
-    Linuxで動くコンソールファイラ(CUIファイラ)です。
-    ファイルのコピーや移動、削除、改名、検索、解凍などが行えます。
-    うりはシェルスクリプト言語xyzshを組み込んでいて簡単なプログラム(スクリプトと呼ぶ)を実行できることです。
+    昔なつかし2画面のコンソールファイラ(CUIファイラ)、mfiler4のプロジェクト。(コンソールファイラは国産アーキテクチャがあったころのMS-DOS時代に盛んに作られていた)。インタラクティブシェルxyzshを組み込み、柔軟にファイルの管理やスクリプトの実行ができる。 Linux, OSX, cygwin, FreeBSDに対応しています。インストールにはxyzshのインストールが必要となります。先にxyzshをインストールしてください。
+
+    うりは多彩な表示モード、ソートオプション、findやgrepによる仮想ディレクトリの作成、xyzshシェルとのシームレスな連携です。このソフトからbashやFinderやnatuilusも開けます。
 
 使用上の注意
     このプログラムの実行は自己責任で行ってください。ファイル操作やプログラムの実行という重要な操作を行うプログラムであるという認識は作者にもあり、しっかりとデバッグを行っていますが、もし見過ごしている不具合があって、実行結果によって使用者が被害を被っても作者は責任は持てません。このことが承知できる方だけ使用してください。
@@ -43,6 +43,7 @@
 
 注) 2010/03 KaoriyaのC/MigemoはUTF8の辞書ライブラリがありませんでした。/usr/share/cmigemo/{eucjp,sjis}か/usr/local/share/migemo/{eucjp,sjis}に置いてある辞書ファイル全てをnkf -w 辞書ファイル名 > /usr/local/share/migemo/utf-8/辞書ファイル名としてUTF-8の辞書を作ってください。
 注) 2013/01 mfiler4自体はC/Migemoに依存関係が無くなりました。xyzshがC/Migemoに依存します。xyzshのコンパイルをするときにC/Migemoをコンパイルするように指定すればmfiler4のインクリメンタルサーチでもC/Migemoを使うことができます。
+注) 2013/08 パフォーマンスの問題で再びmfiler4自体にC/Migemoに依存関係ができました。Migemoを使ったインクリメンタルサーチをするためには--with-migemo --with-system-migemodirを指定してconfigureする必要があります。
 
     あと以下のプログラムにも依存しています。
 
@@ -81,6 +82,9 @@
     --with-optimize コードの最適化を有効にします。
     --with-onig-dir 鬼車が標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
     --with-xyzsh-dir xyzshが標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
+    --with-migemo C/Migemoを有効にします。C/Migemoはインストールしただけではmfiler4で使われません。このオプションを指定して有効にしてください。
+    --with-migemo-dir C/Migemoが標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
+    --with-system-migemo-dir C/Migemoの辞書ファイルの位置を指定します。
 
 使用するファイル
     /usr/local/bin/mfiler4 プログラム本体
@@ -118,21 +122,14 @@ OSXでのコンパイルや実行について
     cd /usr/local/share/migemo/cp932
     for i in *; do nkf -w $i > ../utf-8/$i; done
 
-    ./configure
+    ./configure --with-migemo --with-system-migemodir=/usr/local/share/migemo
     make && sudo make install
 
     で作れるはずです。
-    (mfiler4はC/Migemoに依存しなくなりました。xyzshがC/Migemoに依存します)
 
-cygwinでのコンパイルや実行について
-    migemoをつけたい場合は
-
-    ./configure --with-migemo
-
-    をしてください。ライブラリがリンクされます。(xyzshのほうも--with-migemo --with-system-migemodir=/usr/local/share/migemoなどが必要です。)
-
-    こちらの力不足で動的ライブラリを実行時にリンクするのはcygwinでは無理です。migemoもコンパイル時にリンクしてごまかしてます。
+オプション
+    -x 画面のリフレッシュにclearを使わずにeraseを使います。urxvtなどの端末では画面のちらつきが抑えられるかもしれません。
 
 著作権
-    ab25cqにあります。ライセンスはMITライセンスとします。再配布するときは一報してもらえると助かります。
+    ab25cqにあります。ライセンスはGPL v3ライセンスとします。再配布するときは一報してもらえると助かります。
 
