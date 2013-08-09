@@ -34,6 +34,11 @@ How do I compile this?
     --with-debug --> use debug mode. you can detect memory leaks and debug with gdb.
     --with-gprof-debug --> use gprof debug mode. you can profile mfiler4 with gprof
 
+Repositories
+
+    Stable http://sourceforge.jp/projects/mfiler4
+    Development https://github.com/ab25cq/mfiler4
+
 used files by mfiler4
     /usr/local/bin/mfiler4 the program
     /usr/local/bin/mattr sub program

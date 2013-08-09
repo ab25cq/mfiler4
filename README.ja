@@ -130,6 +130,11 @@ OSXでのコンパイルや実行について
 オプション
     -x 画面のリフレッシュにclearを使わずにeraseを使います。urxvtなどの端末では画面のちらつきが抑えられるかもしれません。
 
+リポジトリ
+
+    安定板 http://sourceforge.jp/projects/mfiler4
+    開発版 https://github.com/ab25cq/mfiler4
+
 著作権
     ab25cqにあります。ライセンスはGPL v3ライセンスとします。再配布するときは一報してもらえると助かります。
 
