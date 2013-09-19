@@ -600,6 +600,9 @@ void isearch_input(int meta, int* keybuf, int keybuf_size)
             if(!match_next(0)) {
                 gISearchPartMatch = TRUE;
 
+                (void)match_next(0);
+
+/*
                 if(!match_next(0)) {
                     string_erase(gInputFileName, string_length(gInputFileName)-1, 1);
 
@@ -613,11 +616,14 @@ void isearch_input(int meta, int* keybuf, int keybuf_size)
                     }
 #endif
                 }
+*/
 
                 gISearchPartMatch = FALSE;
             }
         }
         else {
+            (void)match_next(0);
+/*
             if(!match_next(0)) {
                 string_erase(gInputFileName, string_length(gInputFileName)-1, 1);
 
@@ -631,6 +637,7 @@ void isearch_input(int meta, int* keybuf, int keybuf_size)
                 }
 #endif
             }
+*/
         }
     }
 }

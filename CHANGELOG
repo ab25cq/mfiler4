@@ -1,4 +1,12 @@
 
+2013 9月19日 1.2.5
+
+    1. Migemoのインクリメンタルサーチが巧く動いてませんでした。修正。
+
+2013 19th of September version 1.2.5
+
+    1. Modified bug with migemo incremental search
+
 2013 9th of August version 1.2.4
 
     1. Modified bug with copy override screen.
