@@ -2992,7 +2992,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     return TRUE;
 }
 
-BOOL cmd_mchoise(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
+BOOL cmd_mchoice(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
     if(runinfo->mArgsNumRuntime >= 3) {
         BOOL make_raw = FALSE;
@@ -3008,7 +3008,7 @@ BOOL cmd_mchoise(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             str[j-2] = runinfo->mArgsRuntime[j];
         }
 
-        char* smsg = choise(msg, str, runinfo->mArgsNumRuntime -2, -1);
+        char* smsg = choice(msg, str, runinfo->mArgsNumRuntime -2, -1);
         FREE(str);
         char buf[BUFSIZ];
         int size;
@@ -3214,7 +3214,7 @@ void commands_init()
     xyzsh_add_inner_command(gMFiler4, "path", cmd_path, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "cursor_num", cmd_cursor_num, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "isearch", cmd_isearch, 0);
-    xyzsh_add_inner_command(gMFiler4, "mchoise", cmd_mchoise, 0);
+    xyzsh_add_inner_command(gMFiler4, "mchoice", cmd_mchoice, 0);
     xyzsh_add_inner_command(gMFiler4, "activate", cmd_activate, 0);
     xyzsh_add_inner_command(gMFiler4, "defmenu", cmd_defmenu, 0);
     xyzsh_add_inner_command(gMFiler4, "addmenu", cmd_addmenu, 0);

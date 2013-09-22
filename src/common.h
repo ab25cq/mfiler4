@@ -202,7 +202,7 @@ void xendwin();
 void xclear();
 void xclear_immediately();
 void mclear_lastline();
-char* choise(char* msg, char* str[], int len, int cancel);
+char* choice(char* msg, char* str[], int len, int cancel);
 void merr_msg(char* msg, ...);
 void msg_nonstop(char* msg, ...);
 int select_str(char* msg, char* str[], int len, int cancel);

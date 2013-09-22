@@ -579,7 +579,7 @@ def regex_rename (
         )
     ) | less
 
-    if(mchoise "rename ok?" no yes |chomp| = yes) (
+    if(mchoice "rename ok?" no yes |chomp| = yes) (
         sys::clear
         markfiles | each ( 
             | var -local FILE
@@ -653,13 +653,13 @@ keycommand $keycode::l (
 )
 
 keycommand $keycode::d  (
-    if(marking |chomp | = 1 && mchoise "move file to trashbox ok?" yes no |chomp| = yes )( 
+    if(marking |chomp | = 1 && mchoice "move file to trashbox ok?" yes no |chomp| = yes )( 
         mtrashbox -f 
     )
 )
 
 keycommand $keycode::D (
-    if(marking |chomp| = 1 && mchoise "DELETE file ok?" yes no |chomp| = yes) ( 
+    if(marking |chomp| = 1 && mchoice "DELETE file ok?" yes no |chomp| = yes) ( 
         mrm 
     )
 )
@@ -787,7 +787,7 @@ keycommand $keycode::G          (
 
 keycommand $keycode::slash      ( isearch )
 
-keycommand $keycode::ctrl_c     ( if(mchoise quit\? yes no | = yes\n)( quit ) )
+keycommand $keycode::ctrl_c     ( if(mchoice quit\? yes no | = yes\n)( quit ) )
 
 def exchange_2pain_directories (
     cursor -d 0 | var -local cursor_0dir
@@ -886,7 +886,7 @@ keycommand $keycode::q          (
 
         print 1pain2 | export VIEW_OPTION
     ) else (
-        if(mchoise quit\? yes no | = yes\n)( 
+        if(mchoice quit\? yes no | = yes\n)( 
             quit 
         )
     )
@@ -1375,7 +1375,7 @@ isearch
 -
 インクリメンタルサーチを開始
 -
-mchoise メッセージ 選択肢１ 選択肢２....
+mchoice メッセージ 選択肢１ 選択肢２....
 -
 選択肢をユーザーから選んでもらって、その選ばれた選択肢を出力する。
 -
@@ -1625,9 +1625,9 @@ isearch
 -
 start incremental search
 -
-mchoise message item1 item2 ...
+mchoice message item1 item2 ...
 -
-make user choise the items
+make user choice the items
 -
 activate [directory number]
 -

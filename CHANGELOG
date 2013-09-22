@@ -1,4 +1,12 @@
 
+2013 9月22日 1.2.6
+
+    1. Migemoのインクリメンタルサーチが巧く動いてませんでした。修正。
+
+2013 22th of September version 1.2.6
+
+    1. Modified bug with migemo incremental search
+
 2013 9月19日 1.2.5
 
     1. Migemoのインクリメンタルサーチが巧く動いてませんでした。修正。

@@ -84,7 +84,7 @@
     --with-xyzsh-dir xyzshが標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
     --with-migemo C/Migemoを有効にします。C/Migemoはインストールしただけではmfiler4で使われません。このオプションを指定して有効にしてください。
     --with-migemo-dir C/Migemoが標準の場所にインストールされていない場合はインストールされたディレクトリを指定します。
-    --with-system-migemo-dir C/Migemoの辞書ファイルの位置を指定します。
+    --with-system-migemodir C/Migemoの辞書ファイルの位置を指定します。
 
 使用するファイル
     /usr/local/bin/mfiler4 プログラム本体

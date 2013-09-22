@@ -107,6 +107,10 @@ static char* mystrcasestr(const char *haystack, const char *needle)
 /// 後ろにマッチするファイル名にカーソルを移動 ///
 static BOOL match_back(int start)
 {
+    if(start < 0 || start >= vector_count(filer_dir(adir())->mFiles)) {
+        return FALSE;
+    }
+
 #if !defined(HAVE_MIGEMO_H)
     if(string_c_str(gInputFileName)[0] != 0) {
         int i;
@@ -254,6 +258,10 @@ static BOOL match_back(int start)
 /// 前にマッチするファイル名にカーソルを移動 ///
 static BOOL match_next(int start)
 {
+    if(start < 0 || start >= vector_count(filer_dir(adir())->mFiles)) {
+        return FALSE;
+    }
+
 #if !defined(HAVE_MIGEMO_H)
     if(string_c_str(gInputFileName)[0] != 0) {
         int i;
@@ -275,8 +283,8 @@ static BOOL match_next(int start)
 
 #else
 
-    if(string_length(gInputFileName) <= 2) {
-        if(string_c_str(gInputFileName)[0] != 0) {
+    if(string_c_str(gInputFileName)[0] != 0) {
+        if(string_length(gInputFileName) <= 2) {
             int i;
             for(i=start; i<vector_count(filer_dir(adir())->mFiles); i++) {
                 sFile* file = (sFile*)vector_item(filer_dir(adir())->mFiles, i);
@@ -291,106 +299,104 @@ static BOOL match_next(int start)
                 }
             }
         }
-
-        return FALSE;
-    }
-    else if(string_c_str(gInputFileName)[0] != 0) {
-        /// get reg ///
-        if(gReg == NULL) {
-            regex_t* reg = hash_item(gMigemoCache, (unsigned char*)string_c_str(gInputFileName));
-            if(reg) {
-                gReg = reg;
-            }
-            else {
-                OnigUChar* p = migemo_query(gMigemo, (unsigned char*)string_c_str(gInputFileName));
-                if(p == NULL) {
-                    return FALSE;
-                }
-
-                OnigUChar* p2 = MALLOC(strlen(p)*2);
-                char* p3 = p2;
-                char* p4 = p;
-                while(*p4) {
-                    if(*p4 == '+') {
-                        *p3++ = '\\';
-                        *p3++ = *p4++;
-                    }
-                    else {
-                        *p3++ = *p4++;
-                    }
-                }
-                *p3 = 0;
-
-                int r;
-                OnigErrorInfo err_info;
-
-                if(gKanjiCode == kUtf8) {
-                    r = onig_new(&gReg, p2, p2 + strlen((char*)p2), ONIG_OPTION_DEFAULT, ONIG_ENCODING_UTF8, ONIG_SYNTAX_DEFAULT,  &err_info);
-                }
-                else if(gKanjiCode == kEucjp) {
-                    r = onig_new(&gReg, p2, p2 + strlen((char*)p2), ONIG_OPTION_DEFAULT, ONIG_ENCODING_EUC_JP, ONIG_SYNTAX_DEFAULT, &err_info);
+        else {
+            /// get reg ///
+            if(gReg == NULL) {
+                regex_t* reg = hash_item(gMigemoCache, (unsigned char*)string_c_str(gInputFileName));
+                if(reg) {
+                    gReg = reg;
                 }
                 else {
-                    r = onig_new(&gReg, p2, p2 + strlen((char*)p2), ONIG_OPTION_DEFAULT, ONIG_ENCODING_SJIS, ONIG_SYNTAX_DEFAULT, &err_info);
-                }
-                migemo_release(gMigemo, (unsigned char*) p);
+                    OnigUChar* p = migemo_query(gMigemo, (unsigned char*)string_c_str(gInputFileName));
+                    if(p == NULL) {
+                        return FALSE;
+                    }
 
-                FREE(p2);
+                    OnigUChar* p2 = MALLOC(strlen(p)*2);
+                    char* p3 = p2;
+                    char* p4 = p;
+                    while(*p4) {
+                        if(*p4 == '+') {
+                            *p3++ = '\\';
+                            *p3++ = *p4++;
+                        }
+                        else {
+                            *p3++ = *p4++;
+                        }
+                    }
+                    *p3 = 0;
 
-                if(r != ONIG_NORMAL) {
-                    return FALSE;
-                }
+                    int r;
+                    OnigErrorInfo err_info;
 
-                /// 一文字だけの正規表現は重いのでキャッシュする
-                unsigned char* p5 = string_c_str(gInputFileName);
-                if(strlen(p5) == 1 && *p5 >= 'A' && *p5 <= 'z') {
-                    hash_put(gMigemoCache, (unsigned char*)string_c_str(gInputFileName), gReg);
+                    if(gKanjiCode == kUtf8) {
+                        r = onig_new(&gReg, p2, p2 + strlen((char*)p2), ONIG_OPTION_DEFAULT, ONIG_ENCODING_UTF8, ONIG_SYNTAX_DEFAULT,  &err_info);
+                    }
+                    else if(gKanjiCode == kEucjp) {
+                        r = onig_new(&gReg, p2, p2 + strlen((char*)p2), ONIG_OPTION_DEFAULT, ONIG_ENCODING_EUC_JP, ONIG_SYNTAX_DEFAULT, &err_info);
+                    }
+                    else {
+                        r = onig_new(&gReg, p2, p2 + strlen((char*)p2), ONIG_OPTION_DEFAULT, ONIG_ENCODING_SJIS, ONIG_SYNTAX_DEFAULT, &err_info);
+                    }
+                    migemo_release(gMigemo, (unsigned char*) p);
+
+                    FREE(p2);
+
+                    if(r != ONIG_NORMAL) {
+                        return FALSE;
+                    }
+
+                    /// 一文字だけの正規表現は重いのでキャッシュする
+                    unsigned char* p5 = string_c_str(gInputFileName);
+                    if(strlen(p5) == 1 && *p5 >= 'A' && *p5 <= 'z') {
+                        hash_put(gMigemoCache, (unsigned char*)string_c_str(gInputFileName), gReg);
+                    }
                 }
             }
-        }
 
-        /// start ///
-        int i;
-        sObject* v = filer_dir(adir())->mFiles;
-        for(i=start; i<vector_count(v); i++) {
-            sFile* file = (sFile*)vector_item(filer_dir(adir())->mFiles, i);
-            char* fnamev = string_c_str(file->mNameView);
+            /// start ///
+            int i;
+            sObject* v = filer_dir(adir())->mFiles;
+            for(i=start; i<vector_count(v); i++) {
+                sFile* file = (sFile*)vector_item(filer_dir(adir())->mFiles, i);
+                char* fnamev = string_c_str(file->mNameView);
 
-            BOOL all_english = TRUE;
-            char* p = fnamev;
-            while(*p) {
-                if(!(*p>=' ' && *p<='~')) {
-                    all_english = FALSE;
-                    break;
+                BOOL all_english = TRUE;
+                char* p = fnamev;
+                while(*p) {
+                    if(!(*p>=' ' && *p<='~')) {
+                        all_english = FALSE;
+                        break;
+                    }
+                    p++;
                 }
-                p++;
-            }
 
-            if(all_english) {
-                char* result = mystrcasestr(fnamev, string_c_str(gInputFileName));
-                if(!gISearchPartMatch && result == fnamev
-                    || gISearchPartMatch && result != NULL)
-                {
-                    (void)filer_cursor_move(adir(), i);
+                if(all_english) {
+                    char* result = mystrcasestr(fnamev, string_c_str(gInputFileName));
+                    if(!gISearchPartMatch && result == fnamev
+                        || gISearchPartMatch && result != NULL)
+                    {
+                        (void)filer_cursor_move(adir(), i);
+                        
+                        return TRUE;
+                    }
                     
-                    return TRUE;
                 }
-                
-            }
-            else {
-                OnigRegion* region = onig_region_new();
-                
-                OnigUChar* str2 = (OnigUChar*)fnamev;
+                else {
+                    OnigRegion* region = onig_region_new();
+                    
+                    OnigUChar* str2 = (OnigUChar*)fnamev;
 
-                int r2 = onig_search(gReg, str2, str2 + strlen((char*)str2), str2, str2 + strlen((char*)str2), region, ONIG_OPTION_NONE);
+                    int r2 = onig_search(gReg, str2, str2 + strlen((char*)str2), str2, str2 + strlen((char*)str2), region, ONIG_OPTION_NONE);
 
-                onig_region_free(region, 1);
+                    onig_region_free(region, 1);
 
-                if(!gISearchPartMatch && r2 == 0
-                    || gISearchPartMatch && r2 >= 0)
-                {
-                    (void)filer_cursor_move(adir(), i);
-                    return TRUE;
+                    if(!gISearchPartMatch && r2 == 0
+                        || gISearchPartMatch && r2 >= 0)
+                    {
+                        (void)filer_cursor_move(adir(), i);
+                        return TRUE;
+                    }
                 }
             }
         }
@@ -600,10 +606,7 @@ void isearch_input(int meta, int* keybuf, int keybuf_size)
             if(!match_next(0)) {
                 gISearchPartMatch = TRUE;
 
-                (void)match_next(0);
-
-/*
-                if(!match_next(0)) {
+                if(!match_next(0) && string_length(gInputFileName) > 2) {
                     string_erase(gInputFileName, string_length(gInputFileName)-1, 1);
 
 #if defined(HAVE_MIGEMO_H)
@@ -616,14 +619,11 @@ void isearch_input(int meta, int* keybuf, int keybuf_size)
                     }
 #endif
                 }
-*/
 
                 gISearchPartMatch = FALSE;
             }
         }
         else {
-            (void)match_next(0);
-/*
             if(!match_next(0)) {
                 string_erase(gInputFileName, string_length(gInputFileName)-1, 1);
 
@@ -637,7 +637,6 @@ void isearch_input(int meta, int* keybuf, int keybuf_size)
                 }
 #endif
             }
-*/
         }
     }
 }

@@ -224,7 +224,7 @@ void msg_nonstop(char* msg, ...)
 ///////////////////////////////////////////////////
 // 選択
 ///////////////////////////////////////////////////
-char* choise(char* msg, char* str[], int len, int cancel)
+char* choice(char* msg, char* str[], int len, int cancel)
 {
     const int maxy = mgetmaxy();
     const int maxx = mgetmaxx();
