@@ -69,7 +69,7 @@ Usage of xyzsh
     
     When switching cmdline, run help
 
-mfiler3 inner command
+mfiler4 inner command
 
 
 keycode

@@ -1535,7 +1535,7 @@ EOS | help::set_helps_ja
     print <<<'EOS'
 quit [return code]
 -
-exit mfiler3
+exit mfiler4
 -
 keycommand [-m/-external] [keycode] [block]
 -
