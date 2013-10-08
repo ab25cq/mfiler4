@@ -24,6 +24,7 @@ AC_ARG_WITH(onig-dir,           [  --with-onig-dir=DIR       set oniguruma direc
 AC_ARG_WITH(xyzsh-dir,          [  --with-xyzsh-dir=DIR    set xyzsh directory ], [ XYZSH_DIR="$with_val"  ], [ XYZSH_DIR= ])
 AC_ARG_WITH(migemo,             [  --with-migemo             enable migemo for japanese romaji completion ], [ ENABLE_MIGEMO=1 ], [ ENABLE_MIGEMO=0 ])
 AC_ARG_WITH(migemo-dir,         [  --with-migemo-dir=DIR     set migemo install prefix ], [ MIGEMO_DIR="$withval"  ], [ MIGEMO_DIR= ])
+AC_ARG_WITH(ruby-dir,           [  --with-ruby-dir=DIR       set ruby install prefix ], [ RUBY_DIR="$withval" ], [ RUBY_DIR= ])
 AC_ARG_WITH(system-migemodir,[ --with-system-migemodir       specify the directory of system migemo dictionary. /usr/share/migemo, for example], [ if test -n "$withval"; then echo "system-migemodir = $withval" ; SYSTEM_MIGEMODIR="$withval"; fi ], [ if test -e /usr/local/share/migemo/utf-8/migemo-dict; then SYSTEM_MIGEMODIR=/usr/local/share/migemo; else SYSTEM_MIGEMODIR=/usr/share/cmigemo; fi ] )
 
 AC_SUBST(SYSTEM_MIGEMODIR)
@@ -84,6 +85,16 @@ fi
 if test -n "$MIGEMO_DIR"
 then
     if test -e "$MIGEMO_DIR/include/migemo.h" && test -e "$MIGEMO_DIR/lib/libmigemo.so"
+    then
+        CFLAGS="$CFLAGS -I$MIGEMO_DIR/include -L$MIGEMO_DIR/lib"
+    else
+        echo "can't found migemo.h in $MIGEMO_DIR/include or libmigemo.so in $MIGEMO_DIR/lib"
+    fi
+fi
+
+if test -n "$RUBY_DIR"
+then
+    if test -e "$RUBY_DIR/lib/ruby/1.8/*/ruby.h" && test -e "$MIGEMO_DIR/lib/libmigemo.so"
     then
         CFLAGS="$CFLAGS -I$MIGEMO_DIR/include -L$MIGEMO_DIR/lib"
     else
