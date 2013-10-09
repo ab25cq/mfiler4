@@ -10,8 +10,8 @@ BACKSPACE, CTRL-H, DELETE         move to parent direcotry
 \                                 move to root directory
 ~                                 move to home directory
 ENTER                             run cursor file(insert directory)
-tab                               go to 2pain mode
-q                                 quit from 2pain mode or quit from mfiler4
+tab                               go to 2pane mode
+q                                 quit from 2pane mode or quit from mfiler4
 CTRL-C                            quit
 CTRL-L                            reread diskt and redraw the screen
 SPACE                             mark file

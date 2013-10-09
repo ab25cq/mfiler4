@@ -65,7 +65,7 @@ def toggle_list_mode (
         export VIEW_OPTION | var VIEW_LIST_MODE_OPTION
 
         print 1 | (| export VIEW_PERMISSION; | export VIEW_NLINK; | export VIEW_OWNER; | export VIEW_GROUP; | export VIEW_SIZE; | export VIEW_MTIME)
-        print 1pain | export VIEW_OPTION
+        print 1pane | export VIEW_OPTION
     ) else (
         print 0 | var VIEW_LIST_MODE
 
@@ -95,7 +95,7 @@ def toggle_nameonly_mode (
         export VIEW_OPTION | var VIEW_NAMEONLY_MODE_OPTION
 
         print 0 | (| export VIEW_PERMISSION; | export VIEW_NLINK; | export VIEW_OWNER; | export VIEW_GROUP; | export VIEW_SIZE; | export VIEW_MTIME)
-        print 1pain | export VIEW_OPTION
+        print 1pane | export VIEW_OPTION
     ) else (
         print 0 | var VIEW_NAMEONLY_MODE
 
@@ -139,22 +139,22 @@ def toggle_color (
 
 defmenu view
 addmenu view '2dir (a)ll' $keycode::a (
-    print 2pain | export VIEW_OPTION
+    print 2pane | export VIEW_OPTION
 )
 
 addmenu view '1dir(1)' $keycode::1 (
-    print 1pain | export VIEW_OPTION 
+    print 1pane | export VIEW_OPTION 
 )
 
 addmenu view '1dir(2)' $keycode::2 (
-    print 1pain2 | export VIEW_OPTION
+    print 1pane2 | export VIEW_OPTION
 )
 
 addmenu view '1dir(3)' $keycode::3 (
-    print 1pain3 | export VIEW_OPTION
+    print 1pane3 | export VIEW_OPTION
 )
 addmenu view '1dir(5)' $keycode::5 (
-    print 1pain5 | export VIEW_OPTION
+    print 1pane5 | export VIEW_OPTION
 )
 
 print 0 | ( | export VIEW_SIZE; | export VIEW_MTIME; | export VIEW_OWNER; | export VIEW_GROUP; | export VIEW_NLINK; | export VIEW_PERMISSION; | export VIEW_DIVIDE_EXTENSION; | export VIEW_FOCUSBACK; | export VIEW_PAGE; | export VIEW_PAGE; | export VIEW_ADD_STAR_EXE; | export COLOR_EXE)
@@ -395,10 +395,10 @@ def scroll_right (
 
 keycommand $keycode::J ( cmdline -q "mfiler4::mcd $PWD" -1 )
 
-keycommand $keycode::left      ( if(export VIEW_OPTION |chomp| = 2pain)( activate 0 ) else ( scroll_left ) )
-keycommand $keycode::ctrl_b    ( if(export VIEW_OPTION |chomp| = 2pain)( activate 0 ) else ( scroll_left ) )
-keycommand $keycode::right     ( if(export VIEW_OPTION |chomp| = 2pain)( activate 1 ) else ( scroll_right ) )
-keycommand $keycode::ctrl_f    ( if(export VIEW_OPTION |chomp| = 2pain)( activate 1 ) else ( scroll_right ) )
+keycommand $keycode::left      ( if(export VIEW_OPTION |chomp| = 2pane)( activate 0 ) else ( scroll_left ) )
+keycommand $keycode::ctrl_b    ( if(export VIEW_OPTION |chomp| = 2pane)( activate 0 ) else ( scroll_left ) )
+keycommand $keycode::right     ( if(export VIEW_OPTION |chomp| = 2pane)( activate 1 ) else ( scroll_right ) )
+keycommand $keycode::ctrl_f    ( if(export VIEW_OPTION |chomp| = 2pane)( activate 1 ) else ( scroll_right ) )
 
 keycommand $keycode::ctrl_l ( mclear_immediately; reread -d 0; reread -d 1 )
 
@@ -613,7 +613,7 @@ keycommand $keycode::space     ( mark -t -n $(cursor_num|chomp); cursor_move +1 
 keycommand $keycode::colon -external ( bash )
 
 keycommand $keycode::c (
-    if(export VIEW_OPTION |chomp| = 2pain) ( 
+    if(export VIEW_OPTION |chomp| = 2pane) ( 
         mcp $(path -d sdir|chomp) 
     ) else ( 
         cmdline -q "mfiler4::mcp \"$(path|chomp)\"" -2
@@ -621,7 +621,7 @@ keycommand $keycode::c (
 )
 
 keycommand $keycode::C (
-    if(export VIEW_OPTION |chomp| = 2pain) (
+    if(export VIEW_OPTION |chomp| = 2pane) (
         cmdline 'cp -i -R $(mfiler4::markfiles)'" \"$(path -d sdir|chomp)\"" -2
     ) else ( 
         cmdline 'cp -i -R $(mfiler4::markfiles)'" \"$(path|chomp)\"" -2
@@ -629,7 +629,7 @@ keycommand $keycode::C (
 )
 
 keycommand $keycode::m ( 
-    if(export VIEW_OPTION |chomp| = 2pain)( 
+    if(export VIEW_OPTION |chomp| = 2pane)( 
         mmv $(path -d sdir|chomp) 
     ) else ( 
         cmdline -q "mfiler4::mmv \"$(path|chomp)\"" -2
@@ -637,7 +637,7 @@ keycommand $keycode::m (
 )
 
 keycommand $keycode::M (
-    if(export VIEW_OPTION |chomp| = 2pain)( 
+    if(export VIEW_OPTION |chomp| = 2pane)( 
         cmdline 'mv -i $(mfiler4::markfiles)'" \"$(path -d sdir|chomp)\"" -2
     ) else ( 
         cmdline 'mv -i $(mfiler4::markfiles)'" \"$(path|chomp)\"" -2
@@ -645,7 +645,7 @@ keycommand $keycode::M (
 )
 
 keycommand $keycode::l (
-    if(export VIEW_OPTION |chomp| = 2pain)( 
+    if(export VIEW_OPTION |chomp| = 2pane)( 
         mln $(path -d sdir|chomp) 
     ) else ( 
         cmdline -q "mfiler4::mln \"$(path|chomp)\"" -2
@@ -789,7 +789,7 @@ keycommand $keycode::slash      ( isearch )
 
 keycommand $keycode::ctrl_c     ( if(mchoice quit\? yes no | = yes\n)( quit ) )
 
-def exchange_2pain_directories (
+def exchange_2pane_directories (
     cursor -d 0 | var -local cursor_0dir
     cursor -d 1 | var -local cursor_1dir
 
@@ -809,7 +809,7 @@ def exchange_2pain_directories (
     cursor_move -d 1 /$cursor_0dir
 )
 
-def copy_2pain_directories_0_to_1 (
+def copy_2pane_directories_0_to_1 (
     cursor -d 0 | var -local cursor_0dir
 
     mask -d 1 $(mask -d 0 |chomp)
@@ -818,7 +818,7 @@ def copy_2pain_directories_0_to_1 (
     cursor_move -d 1 /$(cursor_0dir|chomp)
 )
 
-def copy_2pain_directories_1_to_0 (
+def copy_2pane_directories_1_to_0 (
     cursor -d 1 | var -local cursor_1dir
 
     mask -d 0 $(mask -d 1 |chomp)
@@ -828,8 +828,8 @@ def copy_2pain_directories_1_to_0 (
 )
 
 keycommand $keycode::w (
-    if(export VIEW_OPTION| = 2pain\n) (
-        exchange_2pain_directories
+    if(export VIEW_OPTION| = 2pane\n) (
+        exchange_2pane_directories
 
         if(adir |= 1\n) (
             activate 0
@@ -840,27 +840,27 @@ keycommand $keycode::w (
 )
 
 keycommand $keycode::o          ( 
-    if(export VIEW_OPTION | = 2pain\n) (
+    if(export VIEW_OPTION | = 2pane\n) (
         if(adir |= 1\n) (
-            copy_2pain_directories_0_to_1
+            copy_2pane_directories_0_to_1
         ) else (
-            copy_2pain_directories_1_to_0
+            copy_2pane_directories_1_to_0
         )
     )
 )
 
 keycommand $keycode::O          ( 
-    if(export VIEW_OPTION | = 2pain\n) (
+    if(export VIEW_OPTION | = 2pane\n) (
         if(adir |= 1\n) (
-            copy_2pain_directories_1_to_0
+            copy_2pane_directories_1_to_0
         ) else (
-            copy_2pain_directories_0_to_1
+            copy_2pane_directories_0_to_1
         )
     )
 )
 
 keycommand $keycode::tab       (
-    if(export VIEW_OPTION | = 2pain\n) (
+    if(export VIEW_OPTION | = 2pane\n) (
         if(adir |= 0\n) (
             activate 1
         ) else (
@@ -868,23 +868,23 @@ keycommand $keycode::tab       (
         )
     ) else (
         if(adir | = 1\n) (
-            copy_2pain_directories_1_to_0
+            copy_2pane_directories_1_to_0
             activate 0
         )
 
-        copy_2pain_directories_0_to_1
-        print 2pain | export VIEW_OPTION
+        copy_2pane_directories_0_to_1
+        print 2pane | export VIEW_OPTION
         activate 1
     )
 )
 
 keycommand $keycode::q          ( 
-    if(export VIEW_OPTION | = 2pain\n) (
+    if(export VIEW_OPTION | = 2pane\n) (
         if(adir | = 1\n) (
             activate 0
         )
 
-        print 1pain2 | export VIEW_OPTION
+        print 1pane2 | export VIEW_OPTION
     ) else (
         if(mchoice quit\? yes no | = yes\n)( 
             quit 
@@ -981,7 +981,7 @@ def regex_mark (
 keycommand $keycode::plus ( cmdline "mfiler4::regex_mark ''" -2 )
 
 keycommand $keycode::p (
-    if(export VIEW_OPTION | = 2pain\n)( 
+    if(export VIEW_OPTION | = 2pane\n)( 
         if(marking | = 1\n) (
             path -d sdir | chomp | length | chomp | var -local m
             m | + 10 | var -local m
@@ -1007,33 +1007,33 @@ keycommand $keycode::P (
 
 keycommand $keycode::u (
     cursor | scan '.+\.(.+)$' | chomp | if(|= tgz) (
-        if(export VIEW_OPTION |chomp| = 2pain)( 
+        if(export VIEW_OPTION |chomp| = 2pane)( 
             cmdline "tar xvfz '$(cursor|chomp)' -C \"$(path -d sdir|chomp)\"" -2
         ) else ( 
             cmdline "tar xvfz '$(cursor|chomp)' -C \"$(path|chomp)\"" -2
         )
     ) elif (|= tar) (
-        if(export VIEW_OPTION |chomp| = 2pain)( 
+        if(export VIEW_OPTION |chomp| = 2pane)( 
             cmdline "tar xvf '$(cursor|chomp)' -C \"$(path -d sdir|chomp)\"" -2
         ) else ( 
             cmdline "tar xvf '$(cursor|chomp)' -C \"$(path|chomp)\"" -2
         )
     ) elif (|= zip) (
         if(marking | chomp | = 1) (
-            if(export VIEW_OPTION |chomp | = 2pain)( 
+            if(export VIEW_OPTION |chomp | = 2pane)( 
                 cmdline "sys::unzip '$(cursor|chomp)' -d \"$(path -d sdir|chomp)\"" -2
             ) else ( 
                 cmdline "sys::unzip '$(cursor|chomp)' -d \"$(path|chomp)\"" -2
             )
         ) else ( 
-            if(export VIEW_OPTION |chomp| = 2pain)( 
+            if(export VIEW_OPTION |chomp| = 2pane)( 
                 cmdline "sys::unzip '$(cursor|chomp)' -d \"$(path -d sdir|chomp)\"" -2
             ) else ( 
                 cmdline "sys::unzip '$(cursor|chomp)' -d \"$(path|chomp)\"" -2
             )
         )
     ) elif (|= gz) (
-        if(export VIEW_OPTION |chomp| = 2pain)( 
+        if(export VIEW_OPTION |chomp| = 2pane)( 
             if(cursor | index -quiet tar.gz) ( 
                 cmdline "tar xvfz '$(cursor|chomp)' -C \"$(path -d sdir|chomp)\"" -2
             ) else ( 
@@ -1056,7 +1056,7 @@ keycommand $keycode::U (
     ) elif (|= tar) (
         cmdline "tar xvf '$(cursor|chomp)' -C \"$(path -d adir|chomp)\"" -2
     ) elif (|= gz) (
-        if(export VIEW_OPTION |chomp| = 2pain)( 
+        if(export VIEW_OPTION |chomp| = 2pane)( 
             if(cursor | index -quiet tar.gz) ( 
                 cmdline "tar xvfz '$(cursor|chomp)' -C \"$(path|chomp)\"" -2
             ) else ( 

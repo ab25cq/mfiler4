@@ -233,7 +233,7 @@ static void usage()
 static void version()
 {
     printf("mfiler4 version %s with shell scripting system xyzsh version %s.", getenv("VERSION"), getenv("XYZSH_VERSION"));
-    puts("This program is a 2pain file manager with a embedded shell scripting system \"xyzsh\". mfiler4 is developped by ab25cq.");
+    puts("This program is a 2pane file manager with a embedded shell scripting system \"xyzsh\". mfiler4 is developped by ab25cq.");
     puts("compiled with");
 
     puts("+oniguruma");
@@ -247,7 +247,7 @@ static void version()
 static void set_mfenv()
 {
     setenv("#", "-1", 1);
-    setenv("VIEW_OPTION", "2pain", 1);
+    setenv("VIEW_OPTION", "2pane", 1);
     setenv("SYSCONFDIR", SYSCONFDIR, 1);
     setenv("MF4DOCDIR", DOCDIR, 1);
     setenv("VIEW_FILE_SIZE", "Normal", 1);
@@ -752,7 +752,7 @@ int main(int argc, char* argv[])
     CHECKML_BEGIN();    // start to watch memory leak
 
     /// initialization for envronment variable ///
-    setenv("VERSION", "1.2.7", 1);
+    setenv("VERSION", "1.2.8", 1);
     setenv("MFILER4_DOCDIR", DOCDIR, 1);
     setenv("MFILER4_DATAROOTDIR", DOCDIR, 1);
 

@@ -630,8 +630,8 @@ BOOL filer_cursor_move(int dir, int num)
         return FALSE;
     }
 
-    if(strcmp(env_view_option, "2pain") == 0 
-        || strcmp(env_view_option, "1pain") == 0) 
+    if(strcmp(env_view_option, "2pane") == 0 
+        || strcmp(env_view_option, "1pane") == 0) 
     {
          if(dir2->mCursor >= dir2->mScrollTop + maxy) {
              dir2->mScrollTop = (dir2->mCursor/maxy)*maxy;
@@ -640,7 +640,7 @@ BOOL filer_cursor_move(int dir, int num)
              dir2->mScrollTop = (dir2->mCursor/maxy)*maxy;
          }
     }
-    else if(strcmp(env_view_option, "1pain2") == 0) {
+    else if(strcmp(env_view_option, "1pane2") == 0) {
         if(dir2->mCursor >= dir2->mScrollTop + maxy*2) {
              dir2->mScrollTop = (dir2->mCursor/(maxy*2))*(maxy*2);
         }
@@ -648,7 +648,7 @@ BOOL filer_cursor_move(int dir, int num)
             dir2->mScrollTop = (dir2->mCursor/(maxy*2))*(maxy*2);
         }
     }
-    else if(strcmp(env_view_option, "1pain3") == 0) {
+    else if(strcmp(env_view_option, "1pane3") == 0) {
         if(dir2->mCursor >= dir2->mScrollTop + maxy*3) {
              dir2->mScrollTop = (dir2->mCursor/(maxy*3))*(maxy*3);
         }
@@ -656,7 +656,7 @@ BOOL filer_cursor_move(int dir, int num)
             dir2->mScrollTop = (dir2->mCursor/(maxy*3))*(maxy*3);
         }
     }
-    else if(strcmp(env_view_option, "1pain5") == 0) {
+    else if(strcmp(env_view_option, "1pane5") == 0) {
         if(dir2->mCursor >= dir2->mScrollTop + maxy*5) {
              dir2->mScrollTop = (dir2->mCursor/(maxy*5))*(maxy*5);
         }
@@ -1708,9 +1708,9 @@ void filer_view(int dir)
     }
 
     ////////////////////////////////////////////////////
-    // 1pain 1line
+    // 1pane 1line
     ///////////////////////////////////////////////////
-    if(strcmp(env_view_option, "1pain") == 0) {
+    if(strcmp(env_view_option, "1pane") == 0) {
         if(self->mActive) {
             mbox(dstack_exist, 0, maxx-1, maxy-2-dstack_exist-jobs_exist);
 
@@ -1832,9 +1832,9 @@ void filer_view(int dir)
        }
     }
     //////////////////////////////////////////////
-    // 1pain 2lines
+    // 1pane 2lines
     /////////////////////////////////////////////
-    else if(strcmp(env_view_option, "1pain2") == 0) {
+    else if(strcmp(env_view_option, "1pane2") == 0) {
         if(self->mActive) {
             mbox(dstack_exist, 0, maxx-1, maxy-2-dstack_exist-jobs_exist);
 
@@ -1964,9 +1964,9 @@ void filer_view(int dir)
         }
     }
     //////////////////////////////////////////////
-    // 1pain 3lines
+    // 1pane 3lines
     //////////////////////////////////////////////
-    else if(strcmp(env_view_option, "1pain3") == 0) {
+    else if(strcmp(env_view_option, "1pane3") == 0) {
         if(self->mActive) {
             mbox(dstack_exist, 0, maxx-1, maxy-2-dstack_exist-jobs_exist);
 
@@ -2096,9 +2096,9 @@ void filer_view(int dir)
     }
     
     //////////////////////////////////////////////
-    // 1pain 5lines
+    // 1pane 5lines
     //////////////////////////////////////////////
-    else if(strcmp(env_view_option, "1pain5") == 0) {
+    else if(strcmp(env_view_option, "1pane5") == 0) {
         if(self->mActive) {
             mbox(dstack_exist, 0, maxx-1, maxy-2-dstack_exist-jobs_exist);
 
@@ -2225,7 +2225,7 @@ void filer_view(int dir)
     }
 
     //////////////////////////////////////////////
-    // 2pain
+    // 2pane
     //////////////////////////////////////////////
     else {
         int x;
@@ -2604,7 +2604,7 @@ int filer_line(int dir)
     }
 
     if(dir2) {
-        if(strcmp(env_view_option, "2pain") == 0)
+        if(strcmp(env_view_option, "2pane") == 0)
         {
             return dir2->mCursor - dir2->mScrollTop;
         }
@@ -2646,7 +2646,7 @@ int filer_row(int dir)
     }
 
     if(dir2) {
-        if(strcmp(env_view_option, "2pain") == 0)
+        if(strcmp(env_view_option, "2pane") == 0)
         {
             return 0;
         }
@@ -2678,7 +2678,7 @@ int filer_row_max(int dir)
         exit(1);
     }
     if(dir2) {
-        if(strcmp(env_view_option, "2pain") == 0) {
+        if(strcmp(env_view_option, "2pane") == 0) {
             return 1;
         }
         else {
