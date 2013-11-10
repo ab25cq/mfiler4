@@ -1067,7 +1067,7 @@ BOOL cmd_reread(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     return TRUE;
 }
 
-BOOL cmd_sort(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
+BOOL cmd_mfiler4_sort(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
     if(runinfo->mArgsNumRuntime == 1) {
         char* darg = sRunInfo_option_with_argument(runinfo, "-d");
@@ -3220,7 +3220,7 @@ void commands_init()
     xyzsh_add_inner_command(gMFiler4, "addmenu", cmd_addmenu, 0);
     xyzsh_add_inner_command(gMFiler4, "mmenu", cmd_mmenu, 0);
     xyzsh_add_inner_command(gMFiler4, "reread", cmd_reread, 1, "-d");
-    xyzsh_add_inner_command(gMFiler4, "sort", cmd_sort, 1, "-d");
+    xyzsh_add_inner_command(gMFiler4, "sort", cmd_mfiler4_sort, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "markfiles", cmd_markfiles, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "allfiles", cmd_allfiles, 1, "-d");
     xyzsh_add_inner_command(gMFiler4, "mark", cmd_mark, 1, "-d");
