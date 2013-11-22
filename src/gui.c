@@ -672,59 +672,6 @@ finished:
     return gSelectStrCursor;
 }
 
-void xclear_immediately()
-{
-#if defined(__CYGWIN__)
-    int y;
-    for(y=0; y<mgetmaxy(); y++) {
-        mclear_online(y);
-    }
-    refresh();
-#else
-    mclear_immediately();
-#endif
-}
-
-void mclear_lastline()
-{
-    char space[1024];
-    int x;
-
-    const int maxx = mgetmaxx();
-    const int maxy = mgetmaxy();
-
-    for(x=0; x<maxx-1; x++) {
-        space[x] = ' ';
-    }
-    space[x] = 0;
-
-    attron(0);
-    mvprintw(maxy-1, 0, space);
-}
-
-void xclear()
-{
-#if defined(__CYGWIN__)
-    int y;
-    for(y=0; y<mgetmaxy()-1; y++) {
-        mclear_online(y);
-    }
-    mclear_lastline();
-#else
-    if(getenv("MFILER4_CLEAR_WAY")) {
-        int y;
-        for(y=0; y<mgetmaxy()-1; y++) {
-            mclear_online(y);
-        }
-        mclear_lastline();
-        //erase();
-    }
-    else {
-        clear();
-    }
-#endif
-}
-
 void gui_init()
 {
     gInputBoxInput = STRING_NEW_STACK("");
@@ -758,4 +705,21 @@ void mbox(int y, int x, int width, int height)
    }
 
    mvprintw(y + height-1, x, hbar);
+}
+
+void mclear_lastline()
+{
+    char space[1024];
+    int x;
+
+    const int maxx = mgetmaxx();
+    const int maxy = mgetmaxy();
+
+    for(x=0; x<maxx-1; x++) {
+        space[x] = ' ';
+    }
+    space[x] = 0;
+
+    attron(0);
+    mvprintw(maxy-1, 0, space);
 }
