@@ -1086,7 +1086,7 @@ def make_history_menu (
     mfiler4::history | lines -1..0 | head -n 256 | each (
         | var -local Item
         print 65 | + $I | printf "%c" | var -local Key
-        eval "addmenu history '($Key) $Item' '$(print 97 | + $I|chomp)' ( mcd $Item ) "
+        eval "addmenu history '($Key) $Item' '$(print 97 | + $I|chomp)' ( mcd \"$Item\" ) "
 
         ++ I
 

@@ -1,11 +1,19 @@
 
-2013 11月10日 1.2.9
+2013 11月25日 1.2.9
 
     1. cygwinでのコンパイルと実行に対応。ただmigemoは動きません。
 
-2013 10th of November version 1.2.8
+    2. Hのディレクトリのヒストリでスペースを含むディレクトリに移動できない問題を修正。
+
+    3. configureに--with-optimizeを付けると-WerrorをCFLAGSから削除、ワーニングが出ていてもコンパイルは通るようになりました。
+
+2013 25th of November version 1.2.9
 
     1. You can compile and run on cygwin from this version.
+
+    2. Using the directory history menu, you can't jump to the directory named with space before. Fixed the bug.
+
+    3. Removed -Werror from CFLAGS.
 
 2013 10月9日 1.2.8
 

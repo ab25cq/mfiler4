@@ -4,7 +4,7 @@
 ###########################################################################
 CC=@CC@
 INSTALL=@INSTALL@
-CFLAGS=@CFLAGS@ -Werror
+CFLAGS=@CFLAGS@
 LIBS=@LIBS@
 OBJ=src/filer.o src/file.o src/isearch.o src/menu.o src/gui.o src/commands.o src/dir.o src/termbuf.o
 DESTDIR=
