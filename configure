@@ -3026,7 +3026,7 @@ CFLAGS='-DSYSCONFDIR="\"${sysconfdir}/\"" -DDOCDIR="\"${docdir}/\"" -DSYSTEM_MIG
 
 if test $DEBUGGING = 1
 then
-    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -DMDEBUG -Werror $CFLAGS"
+    CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -DMDEBUG $CFLAGS"
 elif test $DEBUGGING = 2
 then
     CFLAGS="-Isrc/ -I$myprefix/include -L$myprefix/lib -I . -g -pg -DMDEBUG  $CFLAGS"

@@ -1,4 +1,13 @@
 
+2013 12月14日 1.3.0
+
+    1. ビルドの修正
+
+
+2013 14th of December version 1.3.0
+
+    1. Checking of build
+
 2013 11月25日 1.2.9
 
     1. cygwinでのコンパイルと実行に対応。ただmigemoは動きません。
