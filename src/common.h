@@ -189,6 +189,8 @@ void cmdline_view_filer();
 void job_view();
 void str_cut2(enum eKanjiCode code, char* mbs, int termsize, char* dest_mbs, int dest_byte);
 
+BOOL filer_get_hitory(sObject* result, int dir);
+
 ///////////////////////////////////////////////////
 // gui.c
 ///////////////////////////////////////////////////
@@ -209,6 +211,8 @@ int select_str(char* msg, char* str[], int len, int cancel);
 int select_str2(char* msg, char* str[], int len, int cancel);
 int input_box(char* msg, char* result, int result_size, char* def_input, int def_cursor);
 void mbox(int y, int x, int width, int height);
+int select_str_on_readline(char* msg, char* str[], int len, int cancel);
+int input_box_on_readline(char* msg, char* result, int result_size, char* def_input, int def_cursor);
 
 ///////////////////////////////////////////////////
 // commands.c
@@ -235,14 +239,10 @@ int convert_fname(char* src, char* des, int des_size);
 ///////////////////////////////////////////////////
 // file.c
 ///////////////////////////////////////////////////
-enum eCopyOverride { kNone, kYesAll, kNoAll, kCancel, kSelectNewer, kYesAllRemainPermission };
-extern enum eCopyOverride gCopyOverride;
+enum eCopyOverrideWay { kNone, kYesAll, kNoAll, kCancel, kSelectNewer, kYesAllRemainPermission };
+BOOL copy_file(char* source, char* dest, BOOL move, BOOL preserve, enum eCopyOverrideWay* override_way, FILE* log, int* err_num);
 
-enum eWriteProtected { kWPNone, kWPYesAll, kWPNoAll, kWPCancel };
-extern enum eWriteProtected gWriteProtected;
-
-BOOL file_copy(char* spath, char* dpath, BOOL move, BOOL preserve);
-BOOL file_remove(char* path, BOOL no_ctrl_c, BOOL msg);
+BOOL remove_file(char* path, BOOL no_ctrl_c, BOOL message, int* err_num, FILE* log);
 
 extern sObject* gMFiler4;
 extern sObject* gMFiler4System;

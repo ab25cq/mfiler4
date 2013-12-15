@@ -2094,23 +2094,23 @@ BOOL cmd_mrename(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
     if(runinfo->mArgsNumRuntime == 3) {
         char* source = runinfo->mArgsRuntime[1];
-        char* distination = runinfo->mArgsRuntime[2];
+        char* destination = runinfo->mArgsRuntime[2];
 
         if(access(source, F_OK) != 0) {
             char buf[128];
-            snprintf(buf, 128, "%s does not exist.", distination);
+            snprintf(buf, 128, "%s does not exist.", destination);
             err_msg(buf, runinfo->mSName, runinfo->mSLine);
             return FALSE;
         }
 
-        if(access(distination, F_OK) == 0) {
+        if(access(destination, F_OK) == 0) {
             char buf[128];
-            snprintf(buf, 128, "%s exists. can't rename", distination);
+            snprintf(buf, 128, "%s exists. can't rename", destination);
             err_msg(buf, runinfo->mSName, runinfo->mSLine);
             return FALSE;
         }
 
-        if(rename(source, distination) < 0) {
+        if(rename(source, destination) < 0) {
             err_msg("rename error", runinfo->mSName, runinfo->mSLine);
             return FALSE;
         }
@@ -2124,7 +2124,7 @@ BOOL cmd_mrename(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         
         if(cursor_move) {
-            int n = filer_file2(adir(), distination);
+            int n = filer_file2(adir(), destination);
             if(n >= 0) (void)filer_cursor_move(adir(), n);
         }
 
@@ -2245,6 +2245,60 @@ static void draw_progress_box(int mark_num)
     mvprintw(y+1, (maxx-22)/2+1, "(%d/%d) files", gProgressMark, mark_num);
 }
 
+// when returning TRUE, log is opened. you need to call finish_logging or fclose(log);
+static BOOL ready_for_logging(FILE** log)
+{
+    char log_path[PATH_MAX];
+    snprintf(log_path, PATH_MAX, "%s/copy_file.log", gHomeDir);
+    *log = fopen(log_path, "w");
+
+    if(*log == NULL) {
+        merr_msg("can't open the log file");
+        return FALSE;
+    }
+
+    fprintf(*log, "-+- the path failed with copying(%s/copy_file.log) -+-\n\n", gHomeDir);
+
+    return TRUE;
+}
+
+static BOOL finish_logging(FILE* log, int err_num)
+{
+    /// an error occurs, show log ///
+    if(err_num > 0) {
+        fprintf(log, "\nThere is %d errors\n", err_num);
+        fclose(log);
+
+        if(mis_raw_mode()) {
+            merr_msg("There is %d errors. see log with running less %s/copy_file.log", err_num, gHomeDir);
+
+            def_prog_mode();
+            endwin();
+            mreset_tty();
+
+            int rcode;
+            char buf[1024];
+            snprintf(buf, 1024, "less '%s/copy_file.log'", gHomeDir);
+            (void)xyzsh_eval(&rcode, buf, "less", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
+
+            reset_prog_mode();
+
+            xinitscr();
+        }
+        else {
+            fprintf(stderr, "There is %d errors. see log with running less %s/copy_file.log", err_num, gHomeDir);
+
+            int rcode;
+            char buf[1024];
+            snprintf(buf, 1024, "cat '%s/copy_file.log'", gHomeDir);
+            (void)xyzsh_eval(&rcode, buf, "less", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
+        }
+    }
+    else {
+        fclose(log);
+    }
+}
+
 BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 {
     BOOL raw_mode = mis_raw_mode();
@@ -2255,62 +2309,8 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     BOOL preserve = sRunInfo_option(runinfo, "-p");
 
     if(runinfo->mArgsNumRuntime == 2) {
-        gCopyOverride = kNone;
-        gWriteProtected = kWPNone;
-
-        /// 引数チェック ///
-        char distination[PATH_MAX];
-        xstrncpy(distination, runinfo->mArgsRuntime[1], PATH_MAX);
-
-        /// 対象がディレクトリかチェック ///
-        if(distination[strlen(distination)-1] != '/')
-        {
-            xstrncat(distination, "/", PATH_MAX);
-        }
-
-        /// ディレクトリが無いなら作成 ///
-        if(access(distination, F_OK) != 0) {
-            char* str[] = {
-                "yes", "no"
-            };
-
-            char buf[BUFSIZ];
-            snprintf(buf, BUFSIZ, "%s doesn't exist. create?", distination);
-
-            if(select_str(buf, str, 2, 1) == 0) {
-                snprintf(buf, BUFSIZ, "mkdir -p %s", distination);
-                if(system(buf) < 0) {
-                    char buf[128];
-                    snprintf(buf, 128, "mcp: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                    if(!raw_mode) {
-                        endwin();
-                    }
-                    return FALSE;
-                }
-            }
-            else {
-                char buf[128];
-                snprintf(buf, 128, "mcp: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                if(!raw_mode) {
-                    endwin();
-                }
-                return FALSE;
-            }
-        }
-
-        /// 目標ディレクトリがディレクトリじゃないならエラー ///
-        struct stat dstat;
-        if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            char buf[128];
-            snprintf(buf, 128, "mcp: distination is not directory");
-            err_msg(buf, runinfo->mSName, runinfo->mSLine);
-            if(!raw_mode) {
-                endwin();
-            }
-            return FALSE;
-        }
+        char destination[PATH_MAX];
+        xstrncpy(destination, runinfo->mArgsRuntime[1], PATH_MAX);
 
         /// go ///
         sObject* markfiles = filer_mark_files(adir());
@@ -2319,6 +2319,17 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
         sDir* dir = filer_dir(adir());
         if(dir) {
+            enum eCopyOverrideWay override_way = kNone;
+
+            /// ready for the log file ///
+            FILE* log;
+            int err_num = 0;
+
+            if(!ready_for_logging(&log)) {
+                if(!raw_mode) { endwin(); }
+                return FALSE;
+            }
+
             int j;
             for(j=0; j<mark_file_num; j++) {
                 sFile* file = vector_item(markfiles, j);
@@ -2343,8 +2354,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         //draw_progress_box(mark_file_num);
                         refresh();
                         
-                        if(!file_copy(source, distination, FALSE, preserve)) 
-                        {
+                        if(!copy_file(source, destination, FALSE, preserve, &override_way, log, &err_num)) {
                             break;
                         }
 
@@ -2356,14 +2366,8 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             }
             vector_delete_on_malloc(markfiles);
             
-            /*
-            mclear();
-            view();
-            refresh();
-            */
-
             dir = filer_dir(0);
-            if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
+            if(strcmp(destination, string_c_str(dir->mPath)) == 0) {
                 //(void)filer_reread(0);
                 char buf[256];
                 snprintf(buf, 256, "reread -d %d", 0);
@@ -2372,13 +2376,15 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             }
 
             dir = filer_dir(1);
-            if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
+            if(strcmp(destination, string_c_str(dir->mPath)) == 0) {
                 //(void)filer_reread(1);
                 char buf[256];
                 snprintf(buf, 256, "reread -d %d", 1);
                 int rcode;
                 (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
             }
+
+            finish_logging(log, err_num);
 
             runinfo->mRCode = 0;
         }
@@ -2401,20 +2407,17 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     BOOL preserve = sRunInfo_option(runinfo, "-p");
 
     if(runinfo->mArgsNumRuntime == 2) {
-        gCopyOverride = kNone;
-        gWriteProtected = kWPNone;
-
         sDir* dir = filer_dir(adir());
 
         if(dir) {
             /// 引数チェック ///
-            char distination[PATH_MAX];
-            xstrncpy(distination, string_c_str(dir->mPath), PATH_MAX);
-            xstrncat(distination, runinfo->mArgsRuntime[1], PATH_MAX);
+            char destination[PATH_MAX];
+            xstrncpy(destination, string_c_str(dir->mPath), PATH_MAX);
+            xstrncat(destination, runinfo->mArgsRuntime[1], PATH_MAX);
 
             /// 対象があるかどうかチェック ///
-            if(access(distination, F_OK) == 0) {
-                err_msg("distination exists", runinfo->mSName, runinfo->mSLine);
+            if(access(destination, F_OK) == 0) {
+                err_msg("destination exists", runinfo->mSName, runinfo->mSLine);
                 if(!raw_mode) {
                     endwin();
                 }
@@ -2450,16 +2453,28 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         view(); // これはコピーの上書き確認のときに正しい位置にカーソルがある必要があったり、＊印の描写などが正しく描写されている必要があるので必要
                         //draw_progress_box(mark_file_num);
                         refresh();
+
+                        /// ready for the log file ///
+                        FILE* log;
+                        int err_num = 0;
+
+                        if(!ready_for_logging(&log)) {
+                            if(!raw_mode) { endwin(); }
+                            return FALSE;
+                        }
+
+                        enum eCopyOverrideWay override_way = kNone;
                         
-                        if(!file_copy(source, distination, FALSE, preserve)) {
+                        if(!copy_file(source, destination, FALSE, preserve, &override_way, log, &err_num)) {
                             err_msg("", runinfo->mSName, runinfo->mSLine);
-                            if(!raw_mode) {
-                                endwin();
-                            }
+                            if(!raw_mode) { endwin(); }
+                            fclose(log);
                             return FALSE;
                         }
 
                         (void)filer_set_mark(adir(), num, FALSE);
+
+                        finish_logging(log, err_num);
                     }
                 }
 
@@ -2490,66 +2505,8 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     BOOL preserve = sRunInfo_option(runinfo, "-p");
 
     if(runinfo->mArgsNumRuntime == 2) {
-        if(force) {
-            gCopyOverride = kYesAll;
-        }
-        else {
-            gCopyOverride = kNone;
-        }
-
-        gWriteProtected = kWPNone;
-
-        /// 引数チェック ///
-        char distination[PATH_MAX];
-        xstrncpy(distination, runinfo->mArgsRuntime[1], PATH_MAX);
-
-        /// 対象がディレクトリ ///
-        if(distination[strlen(distination)-1] != '/') {
-            xstrncat(distination, "/", PATH_MAX);
-        }
-
-        /// ディレクトリが無いなら作成 ///
-        if(access(distination, F_OK) != 0)
-        {
-            char* str[] = {
-                "yes", "no"
-            };
-
-            char buf[BUFSIZ];
-            snprintf(buf, BUFSIZ, "%s doesn't exist. create?", distination);
-
-            if(select_str(buf, str, 2, 1) == 0) {
-                snprintf(buf, BUFSIZ, "mkdir -p %s", distination);
-                if(system(buf) < 0) {
-                    char buf[128];
-                    snprintf(buf, 128, "mmv: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                    if(!raw_mode) {
-                        endwin();
-                    }
-                    return FALSE;
-                }
-            }
-            else {
-                char buf[128];
-                snprintf(buf, 128, "mmv: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                if(!raw_mode) {
-                    endwin();
-                }
-                return FALSE;
-            }
-        }
-
-        /// 目標ファイルがディレクトリかどうかチェック ///
-        struct stat dstat;
-        if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            err_msg("mmv: distination is not directory", runinfo->mSName, runinfo->mSLine);
-            if(!raw_mode) {
-                endwin();
-            }
-            return FALSE;
-        }
+        char destination[PATH_MAX];
+        xstrncpy(destination, runinfo->mArgsRuntime[1], PATH_MAX);
 
         /// go ///
         sDir* dir = filer_dir(adir());
@@ -2559,6 +2516,24 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             const int mark_file_num = vector_count(markfiles);
             gProgressMark = mark_file_num;
 
+            enum eCopyOverrideWay override_way;
+            if(force) {
+                override_way = kYesAll;
+            }
+            else {
+                override_way = kNone;
+            }
+
+            /// ready for the log file ///
+            FILE* log;
+            int err_num = 0;
+
+            if(!ready_for_logging(&log)) {
+                if(!raw_mode) { endwin(); }
+                return FALSE;
+            }
+
+            /// go ///
             int j;
             for(j=0; j<mark_file_num; j++) {
                 sFile* file = vector_item(markfiles, j);
@@ -2582,7 +2557,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         //draw_progress_box(mark_file_num);
                         refresh();
                         
-                        if(!file_copy(source, distination, TRUE, preserve)) {
+                        if(!copy_file(source, destination, TRUE, preserve, &override_way, log, &err_num)) {
                             break;
                         }
 
@@ -2608,6 +2583,8 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
 
             runinfo->mRCode = 0;
+
+            finish_logging(log, err_num);
         }
     }
 
@@ -2632,15 +2609,24 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         }
         return FALSE;
     }
+
+    /// ready for the log file ///
+    char log_path[PATH_MAX];
+    snprintf(log_path, PATH_MAX, "%s/rm_file.log", gHomeDir);
+    FILE* log = fopen(log_path, "w");
+
+    fprintf(log, "-+- failed path of rm files -+-\n\n");
                 
     if(runinfo->mArgsNumRuntime == 1) {
-        gCopyOverride = kNone;
-        gWriteProtected = kWPNone;
-
         /// go ///
         sObject* markfiles = filer_mark_files(adir());
         const int mark_file_num = vector_count(markfiles);
         gProgressMark = mark_file_num;
+
+        if(log == NULL) {
+            merr_msg("can't open the log file");
+            return FALSE;
+        }
 
         int j;
         for(j=0; j<mark_file_num; j++) {
@@ -2666,8 +2652,10 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         view(); // これはコピーの上書き確認のときに正しい位置にカーソルがある必要があったり、＊印の描写などが正しく描写されている必要があるので必要
                         //draw_progress_box(mark_file_num);
                         refresh();
+
+                        int err_num;
                         
-                        if(!file_remove(source, FALSE, TRUE)) {
+                        if(!remove_file(source, FALSE, TRUE, &err_num, log)) {
                             break;
                         }
 
@@ -2696,6 +2684,8 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         runinfo->mRCode = 0;
     }
 
+    fclose(log);
+
     if(!raw_mode) {
         endwin();
     }
@@ -2713,75 +2703,20 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     BOOL preserve = sRunInfo_option(runinfo, "-p");
 
     if(runinfo->mArgsNumRuntime == 1) {
-        if(force) {
-            gCopyOverride = kYesAll;
-        }
-        else {
-            gCopyOverride = kNone;
-        }
-
-        gWriteProtected = kWPNone;
-
         /// 引数チェック ///
-        char distination[PATH_MAX];
+        char destination[PATH_MAX];
 
         char* env = getenv("TRASHBOX_DIR");
         if(env) {
-            xstrncpy(distination, env, PATH_MAX);
+            xstrncpy(destination, env, PATH_MAX);
         }
         else {
-            xstrncpy(distination, getenv("MF4HOME"), PATH_MAX);
-            xstrncat(distination, "/trashbox/", PATH_MAX);
+            xstrncpy(destination, getenv("MF4HOME"), PATH_MAX);
+            xstrncat(destination, "/trashbox/", PATH_MAX);
         }
 
-        if(distination[strlen(distination)-1] != '/') {
-            xstrncat(distination, "/", PATH_MAX);
-        }
-
-        /// ディレクトリが無いなら作成 ///
-        if(access(distination, F_OK) != 0)
-        {
-            char* str[] = {
-                "yes", "no"
-            };
-
-            char buf[BUFSIZ];
-            snprintf(buf, BUFSIZ, "%s doesn't exist. create?", distination);
-
-            if(select_str(buf, str, 2, 1) == 0) {
-                snprintf(buf, BUFSIZ, "mkdir -p %s", distination);
-                if(system(buf) < 0) {
-                    char buf[128];
-                    snprintf(buf, 128, "mmv: making directory err(%s)", distination);
-                    err_msg(buf, runinfo->mSName, runinfo->mSLine);
-
-                    if(!raw_mode) {
-                        endwin();
-                    }
-                    return FALSE;
-                }
-            }
-            else {
-                char buf[128];
-                snprintf(buf, 128, "mmv: destination err(%s)", distination);
-                err_msg(buf, runinfo->mSName, runinfo->mSLine);
-
-                if(!raw_mode) {
-                    endwin();
-                }
-                return FALSE;
-            }
-        }
-
-        /// 目標ファイルがディレクトリかどうかチェック ///
-        struct stat dstat;
-        if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            err_msg("mmv: distination is not directory", runinfo->mSName, runinfo->mSLine);
-
-            if(!raw_mode) {
-                endwin();
-            }
-            return FALSE;
+        if(destination[strlen(destination)-1] != '/') {
+            xstrncat(destination, "/", PATH_MAX);
         }
 
         /// go ///
@@ -2792,6 +2727,24 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             const int mark_file_num = vector_count(markfiles);
             gProgressMark = mark_file_num;
 
+            enum eCopyOverrideWay override_way;
+            if(force) {
+                override_way = kYesAll;
+            }
+            else {
+                override_way = kNone;
+            }
+
+            /// ready for the log file ///
+            FILE* log;
+            int err_num = 0;
+
+            if(!ready_for_logging(&log)) {
+                if(!raw_mode) { endwin(); }
+                return FALSE;
+            }
+
+            /// go ///
             int j;
             for(j=0; j<mark_file_num; j++) {
                 sFile* file = vector_item(markfiles, j);
@@ -2815,7 +2768,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         //draw_progress_box(mark_file_num);
                         refresh();
                         
-                        if(!file_copy(source, distination, TRUE, preserve)) {
+                        if(!copy_file(source, destination, TRUE, preserve, &override_way, log, &err_num)) {
                             break;
                         }
 
@@ -2842,6 +2795,8 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
 
             runinfo->mRCode = 0;
+
+            finish_logging(log, err_num);
         }
     }
 
@@ -2860,27 +2815,27 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
     if(runinfo->mArgsNumRuntime == 2) {
         /// 引数チェック ///
-        char distination[PATH_MAX];
-        xstrncpy(distination, runinfo->mArgsRuntime[1], PATH_MAX);
+        char destination[PATH_MAX];
+        xstrncpy(destination, runinfo->mArgsRuntime[1], PATH_MAX);
 
-        if(distination[strlen(distination)-1] != '/') {
-            xstrncat(distination, "/", PATH_MAX);
+        if(destination[strlen(destination)-1] != '/') {
+            xstrncat(destination, "/", PATH_MAX);
         }
 
         /// ディレクトリが無いなら作成 ///
-        if(access(distination, F_OK) != 0) {
+        if(access(destination, F_OK) != 0) {
             char* str[] = {
                 "yes", "no"
             };
 
             char buf[BUFSIZ];
-            snprintf(buf, BUFSIZ, "%s doesn't exist. create?", distination);
+            snprintf(buf, BUFSIZ, "%s doesn't exist. create?", destination);
 
             if(select_str(buf, str, 2, 1) == 0) {
-                snprintf(buf, BUFSIZ, "mkdir -p %s", distination);
+                snprintf(buf, BUFSIZ, "mkdir -p %s", destination);
                 if(system(buf) < 0) {
                     char buf[128];
-                    snprintf(buf, 128, "mcp: making directory err(%s)", distination);
+                    snprintf(buf, 128, "mcp: making directory err(%s)", destination);
                     err_msg(buf, runinfo->mSName, runinfo->mSLine);
                     if(!raw_mode) {
                         endwin();
@@ -2890,7 +2845,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             }
             else {
                 char buf[128];
-                snprintf(buf, 128, "mcp: destination err(%s)", distination);
+                snprintf(buf, 128, "mcp: destination err(%s)", destination);
                 err_msg(buf, runinfo->mSName, runinfo->mSLine);
                 if(!raw_mode) {
                     endwin();
@@ -2901,8 +2856,8 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
         /// 目標ディレクトリがディレクトリじゃないならエラー ///
         struct stat dstat;
-        if(stat(distination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
-            err_msg("mcp: distination is not directory", runinfo->mSName, runinfo->mSLine);
+        if(stat(destination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
+            err_msg("mcp: destination is not directory", runinfo->mSName, runinfo->mSLine);
             if(!raw_mode) {
                 endwin();
             }
@@ -2941,7 +2896,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         refresh();
 
                         char dfile[PATH_MAX];
-                        xstrncpy(dfile, distination, PATH_MAX);
+                        xstrncpy(dfile, destination, PATH_MAX);
                         xstrncat(dfile, fname, PATH_MAX);
 
                         if(symlink(source, dfile) < 0) {
@@ -2964,7 +2919,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             */
 
             dir = filer_dir(0);
-            if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
+            if(strcmp(destination, string_c_str(dir->mPath)) == 0) {
                 //(void)filer_reread(0);
                 char buf[256];
                 snprintf(buf, 256, "reread -d 0");
@@ -2973,7 +2928,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             }
 
             dir = filer_dir(1);
-            if(strcmp(distination, string_c_str(dir->mPath)) == 0) {
+            if(strcmp(destination, string_c_str(dir->mPath)) == 0) {
                 //(void)filer_reread(1);
                 char buf[256];
                 snprintf(buf, 256, "reread -d 1");

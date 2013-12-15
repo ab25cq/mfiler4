@@ -356,6 +356,12 @@ int sDir_read(sDir* self)
 
             file->mSortRandom = 0;
         }
+
+        if(vector_count(self->mFiles) == 0) {
+            string_put(self->mPath, "/");
+            self->mVD = FALSE;
+            return sDir_read(self);
+        }
     }
     else {
         if(access(string_c_str(self->mPath), F_OK) != 0) {

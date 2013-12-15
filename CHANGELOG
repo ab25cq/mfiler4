@@ -1,8 +1,19 @@
 
+2013 12月14日 1.3.1
+
+    1. 仮想ディレクトリ使用時にファイルが0になることがあるとデグメンテーションフォルトしていましたが、しないように修正。
+
+    2. ファイルのコピー処理や移動処理をリファクタリング。エラーがあってもコピーを続行するようになりました。エラーが出たらログに記録して、ログファイルを表示します。
+
+2013 th of Decemver version 1.3.1
+
+    1. Fixed bug of Virtual Directory.
+
+    2. Coping file is changed. If some error occurs on the operation, mfiler4 conetinues the manipulation and writes logs and output the log at the end of manipulation.
+
 2013 12月14日 1.3.0
 
     1. ビルドの修正
-
 
 2013 14th of December version 1.3.0
 

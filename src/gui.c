@@ -153,56 +153,49 @@ void xgetch_utf8(int* meta, ALLOC int** key, int* key_size)
 }
 
 ///////////////////////////////////////////////////
-// エラーメッセージ表示
+// error message
 ///////////////////////////////////////////////////
 void merr_msg(char* msg, ...)
 {
-    if(gMainLoop == -1) {
-        char msg2[1024];
-        va_list args;
-        va_start(args, msg);
-        vsnprintf(msg2, 1024, msg, args);
-        va_end(args);
-        
+    BOOL raw_mode = mis_raw_mode();
+
+    char msg2[1024];
+    va_list args;
+    va_start(args, msg);
+    vsnprintf(msg2, 1024, msg, args);
+    va_end(args);
+
+    if(raw_mode) {
         const int maxy = mgetmaxy();
         const int maxx = mgetmaxx();
 
-        if(mis_raw_mode()) {
-            xclear();
-            view();
-            mclear_online(maxy-2);
-            mclear_lastline();
-            mvprintw(maxy-2, 0, "%s", msg2);
-            refresh();
+        xclear();
+        view();
+        mclear_online(maxy-2);
+        mclear_lastline();
+        mvprintw(maxy-2, 0, "%s", msg2);
+        refresh();
 
-            (void)getch();
+        (void)getch();
 
 #if defined(__CYGWIN__)
-            xclear_immediately();       // 画面の再描写
-            view();
-            refresh();
+        xclear_immediately();       // 画面の再描写
+        view();
+        refresh();
 #endif
-        }
-        else {
-            fprintf(stderr, "%s", msg2);
-        }
     }
     else {
-        char msg2[1024];
-        va_list args;
-        va_start(args, msg);
-        vsnprintf(msg2, 1024, msg, args);
-        va_end(args);
-
         fprintf(stderr, "%s", msg2);
     }
 }
 
 ///////////////////////////////////////////////////
-// エラーメッセージのノンストップ表示
+// error message with nonstop
 ///////////////////////////////////////////////////
 void msg_nonstop(char* msg, ...)
 {
+    BOOL raw_mode = mis_raw_mode();
+
     char msg2[1024];
 
     va_list args;
@@ -210,19 +203,24 @@ void msg_nonstop(char* msg, ...)
     vsnprintf(msg2, 1024, msg, args);
     va_end(args);
 
-    const int maxy = mgetmaxy();
-    const int maxx = mgetmaxx();
+    if(raw_mode) {
+        const int maxy = mgetmaxy();
+        const int maxx = mgetmaxx();
 
-    xclear();
-    view();
-    mclear_online(maxy-2);
-    mclear_lastline();
-    mvprintw(maxy-2, 0, "%s", msg2);
-    refresh();
+        xclear();
+        view();
+        mclear_online(maxy-2);
+        mclear_lastline();
+        mvprintw(maxy-2, 0, "%s", msg2);
+        refresh();
+    }
+    else {
+        fprintf(stderr, "%s", msg2);
+    }
 }
 
 ///////////////////////////////////////////////////
-// 選択
+// choice
 ///////////////////////////////////////////////////
 char* choice(char* msg, char* str[], int len, int cancel)
 {
@@ -301,7 +299,7 @@ finished:
 }
 
 ///////////////////////////////////////////////////////////////////
-// インプットボックス
+// input box
 ///////////////////////////////////////////////////////////////////
 // result 0: ok 1: cancel
 static void input_box_cursor_move(sObject* input, int* cursor, int v)
@@ -511,9 +509,12 @@ int input_box(char* msg, char* result, int result_size, char* def_input, int def
     return result2;
 }
 
+int input_box_on_readline(char* msg, char* result, int result_size, char* def_input, int def_cursor)
+{
+}
 
 /////////////////////////////////////////////////////////////////////////
-// 文字列選択コマンドライン版
+// select string
 /////////////////////////////////////////////////////////////////////////
 char* gSelectStrMsg;
 char** gSelectStrStr;
@@ -610,6 +611,10 @@ finished:
 #endif
 
     return gSelectStrCursor;
+}
+
+int select_str_on_readline(char* msg, char* str[], int len, int cancel)
+{
 }
 
 int select_str2(char* msg, char* str[], int len, int cancel)
