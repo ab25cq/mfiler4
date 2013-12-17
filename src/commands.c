@@ -2272,16 +2272,13 @@ static BOOL finish_logging(FILE* log, int err_num)
         if(mis_raw_mode()) {
             merr_msg("There is %d errors. see log with running less %s/copy_file.log", err_num, gHomeDir);
 
-            def_prog_mode();
-            xendwin();
+            endwin();
             mreset_tty();
 
             int rcode;
             char buf[1024];
-            snprintf(buf, 1024, "less '%s/copy_file.log'", gHomeDir);
+            snprintf(buf, 1024, "sys::less '%s/copy_file.log'", gHomeDir);
             (void)xyzsh_eval(&rcode, buf, "less", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
-
-            reset_prog_mode();
 
             xinitscr();
         }
@@ -2290,13 +2287,15 @@ static BOOL finish_logging(FILE* log, int err_num)
 
             int rcode;
             char buf[1024];
-            snprintf(buf, 1024, "cat '%s/copy_file.log'", gHomeDir);
+            snprintf(buf, 1024, "sys::cat '%s/copy_file.log'", gHomeDir);
             (void)xyzsh_eval(&rcode, buf, "less", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
         }
     }
     else {
         fclose(log);
     }
+
+    return TRUE;
 }
 
 BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
