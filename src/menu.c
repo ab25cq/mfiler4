@@ -220,7 +220,11 @@ static void menu_run(sMenuItem* item)
         {
             if(rcode == 0) {
                 xinitscr();
-                //(void)filer_reset_marks(adir());
+
+                char buf[256];
+                snprintf(buf, 256, "reread -d 0; reread -d 1; mark -a 0");
+                int rcode;
+                (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
             }
             else {
                 char str[128];

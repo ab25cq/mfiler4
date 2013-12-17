@@ -911,9 +911,6 @@ void filer_input(int meta, int key)
                     snprintf(buf, 256, "reread -d 0; reread -d 1; mark -a 0");
                     int rcode;
                     (void)xyzsh_eval(&rcode, buf, "reread", NULL, gStdin, gStdout, 0, NULL, gMFiler4);
-                    //filer_reread(0);
-                    //filer_reread(1);
-                    //(void)filer_reset_marks(adir());
                 }
                 else {
                     char str[128];

@@ -5,11 +5,19 @@
 
     2. ファイルのコピー処理や移動処理をリファクタリング。エラーがあってもコピーを続行するようになりました。エラーが出たらログに記録して、ログファイルを表示します。
 
+    3. メニューアイテムに-externalをつけると、実行後ディスクを読み込むようになりました。
+
+    4. ファイルのコピー処理のバグフィックス。
+
 2013 th of Decemver version 1.3.1
 
     1. Fixed bug of Virtual Directory.
 
     2. Coping file is changed. If some error occurs on the operation, mfiler4 conetinues the manipulation and writes logs and output the log at the end of manipulation.
+
+    3. Changed menu with -external working. If user runned the menu item, it reads disk.
+
+    4. Fixed bug with coping.
 
 2013 12月14日 1.3.0
 

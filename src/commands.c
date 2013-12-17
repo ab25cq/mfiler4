@@ -2273,7 +2273,7 @@ static BOOL finish_logging(FILE* log, int err_num)
             merr_msg("There is %d errors. see log with running less %s/copy_file.log", err_num, gHomeDir);
 
             def_prog_mode();
-            endwin();
+            xendwin();
             mreset_tty();
 
             int rcode;
@@ -2326,7 +2326,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             int err_num = 0;
 
             if(!ready_for_logging(&log)) {
-                if(!raw_mode) { endwin(); }
+                if(!raw_mode) { xendwin(); }
                 return FALSE;
             }
 
@@ -2391,7 +2391,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     if(!raw_mode) {
-        endwin();
+        xendwin();
     }
 
     return TRUE;
@@ -2419,7 +2419,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             if(access(destination, F_OK) == 0) {
                 err_msg("destination exists", runinfo->mSName, runinfo->mSLine);
                 if(!raw_mode) {
-                    endwin();
+                    xendwin();
                 }
                 return FALSE;
             }
@@ -2442,7 +2442,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         snprintf(buf, 128, "%s doesn't exist", fname);
                         err_msg(buf, runinfo->mSName, runinfo->mSLine);
                         if(!raw_mode) {
-                            endwin();
+                            xendwin();
                         }
                         return FALSE;
                     }
@@ -2459,7 +2459,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         int err_num = 0;
 
                         if(!ready_for_logging(&log)) {
-                            if(!raw_mode) { endwin(); }
+                            if(!raw_mode) { xendwin(); }
                             return FALSE;
                         }
 
@@ -2467,7 +2467,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         
                         if(!copy_file(source, destination, FALSE, preserve, &override_way, log, &err_num)) {
                             err_msg("", runinfo->mSName, runinfo->mSLine);
-                            if(!raw_mode) { endwin(); }
+                            if(!raw_mode) { xendwin(); }
                             fclose(log);
                             return FALSE;
                         }
@@ -2489,7 +2489,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     if(!raw_mode) {
-        endwin();
+        xendwin();
     }
     return TRUE;
 }
@@ -2529,7 +2529,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             int err_num = 0;
 
             if(!ready_for_logging(&log)) {
-                if(!raw_mode) { endwin(); }
+                if(!raw_mode) { xendwin(); }
                 return FALSE;
             }
 
@@ -2589,7 +2589,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     if(!raw_mode) {
-        endwin();
+        xendwin();
     }
     return TRUE;
 }
@@ -2605,7 +2605,7 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         err_msg("invalid terminal setting. not raw mode", runinfo->mSName, runinfo->mSLine);
 
         if(!raw_mode) {
-            endwin();
+            xendwin();
         }
         return FALSE;
     }
@@ -2687,7 +2687,7 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     fclose(log);
 
     if(!raw_mode) {
-        endwin();
+        xendwin();
     }
     return TRUE;
 }
@@ -2740,7 +2740,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             int err_num = 0;
 
             if(!ready_for_logging(&log)) {
-                if(!raw_mode) { endwin(); }
+                if(!raw_mode) { xendwin(); }
                 return FALSE;
             }
 
@@ -2779,15 +2779,6 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 }
             }
             vector_delete_on_malloc(markfiles);
-
-            /*
-            mclear();
-            view();
-            refresh();
-            */
-
-            //(void)filer_reread(0);
-            //(void)filer_reread(1);
             
             char buf[256];
             snprintf(buf, 256, "reread -d 0; reread -d 1");
@@ -2801,7 +2792,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     if(!raw_mode) {
-        endwin();
+        xendwin();
     }
     return TRUE;
 }
@@ -2838,7 +2829,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     snprintf(buf, 128, "mcp: making directory err(%s)", destination);
                     err_msg(buf, runinfo->mSName, runinfo->mSLine);
                     if(!raw_mode) {
-                        endwin();
+                        xendwin();
                     }
                     return FALSE;
                 }
@@ -2848,7 +2839,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 snprintf(buf, 128, "mcp: destination err(%s)", destination);
                 err_msg(buf, runinfo->mSName, runinfo->mSLine);
                 if(!raw_mode) {
-                    endwin();
+                    xendwin();
                 }
                 return FALSE;
             }
@@ -2859,7 +2850,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         if(stat(destination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
             err_msg("mcp: destination is not directory", runinfo->mSName, runinfo->mSLine);
             if(!raw_mode) {
-                endwin();
+                xendwin();
             }
             return FALSE;
         }
@@ -2941,7 +2932,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     }
 
     if(!raw_mode) {
-        endwin();
+        xendwin();
     }
 
     return TRUE;
@@ -2988,7 +2979,7 @@ BOOL cmd_mchoice(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         runinfo->mRCode = 0;
 
         if(make_raw) {
-            endwin();
+            xendwin();
         }
 
         const int maxy = mgetmaxy();

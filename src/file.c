@@ -21,7 +21,7 @@
 #endif
 
 
-void file_copy_override_box(char* spath, struct stat* source_stat, char* dpath, struct stat* dpath_stat)
+void override_check_box(char* spath, struct stat* source_stat, char* dpath, struct stat* dpath_stat)
 {
     const int maxx = mgetmaxx();
     const int maxy = mgetmaxy();
@@ -88,14 +88,14 @@ void file_copy_override_box(char* spath, struct stat* source_stat, char* dpath, 
            , tm_->tm_mday, tm_->tm_hour, tm_->tm_min);
 }
 
-static char* gOverrideSPath;       // to give the arguments to view_file_copy_override_box
+static char* gOverrideSPath;       // to give the arguments to override_check_box_view
 static struct stat* gOverrideStat;
 static char* gOverrideDPath;
 static struct stat* gOverrideDStat;
 
-void view_file_copy_override_box()
+void override_check_box_view()
 {
-    file_copy_override_box(gOverrideSPath, gOverrideStat, gOverrideDPath, gOverrideDStat);
+    override_check_box(gOverrideSPath, gOverrideStat, gOverrideDPath, gOverrideDStat);
 }
 
 static void copy_timestamp_and_permission(char* dpath, struct stat* source_stat, BOOL preserve, FILE* log, int* err_num)
@@ -236,6 +236,7 @@ static BOOL copy_directory_recursively(char* spath, char* spath_basename, char* 
 
 static BOOL copy(char* spath, char* dpath, struct stat* source_stat, BOOL move, BOOL preserve, FILE* log, int* err_num)
 {
+fprintf(log, "copy spath %s dpath %s\n", spath, dpath);
     /// regular file ///
     if(S_ISREG(source_stat->st_mode)) {
         int fd = open(spath, O_RDONLY);
@@ -417,11 +418,14 @@ static BOOL copy(char* spath, char* dpath, struct stat* source_stat, BOOL move, 
     return TRUE;
 }
 
-static BOOL copy_override(char* spath, char* dpath, char* dpath_dirname, struct stat* source_stat, BOOL* run_copy, BOOL* no_mkdir, FILE* log, int* err_num, enum eCopyOverrideWay* override_way)
+static BOOL override_check(char* spath, struct stat* source_stat, char* dpath, char* dpath_dirname, BOOL* run_copy, BOOL* no_mkdir, FILE* log, int* err_num, enum eCopyOverrideWay* override_way)
 {
+fprintf(log, "override check spath %s dpath %s\n", spath, dpath);
+
     int raw_mode = mis_raw_mode();
 
     if(access(dpath, F_OK) == 0) {
+fprintf(log, "access dpath F_OK\n");
         struct stat dpath_stat;
 
         if(lstat(dpath, &dpath_stat) < 0) {
@@ -433,20 +437,21 @@ static BOOL copy_override(char* spath, char* dpath, char* dpath_dirname, struct 
         /// can I override ? ///
         BOOL select_newer = FALSE;
 
-        if(S_ISDIR(dpath_stat.st_mode)) {
+        if(S_ISDIR(source_stat->st_mode) && S_ISDIR(dpath_stat.st_mode)) {
             *no_mkdir = TRUE;
         }
         else {
             if(*override_way == kNone) {
+fprintf(log, "access dpath None\n");
                 int ret;
 override_select_str:
                 if(raw_mode) {
-                    gOverrideSPath = spath;    // give the arguments to view_file_copy_override_box
+                    gOverrideSPath = spath;    // give the arguments to override_check_box_view
                     gOverrideStat = source_stat;
                     gOverrideDPath = dpath;
                     gOverrideDStat = &dpath_stat;
 
-                    gView = view_file_copy_override_box;
+                    gView = override_check_box_view;
 
                     gView();
 
@@ -557,14 +562,17 @@ override_select_str:
                 }
             }
             else if(*override_way == kYesAll) {
+fprintf(log, "access dpath YesAll\n");
                 if(!remove_file(dpath, TRUE, FALSE, err_num, log)) {
                     return FALSE;
                 }
             }
             else if(*override_way == kNoAll) {
+fprintf(log, "access dpath NoAll\n");
                 *run_copy = FALSE;
             }
             else if(*override_way == kSelectNewer) {
+fprintf(log, "access dpath SelectNewer\n");
                 select_newer = TRUE;
             }
         }
@@ -580,6 +588,9 @@ override_select_str:
             }
         }
     }
+else {
+fprintf(log, "access dpath F_OK != 0\n");
+}
 
     return TRUE;
 }
@@ -595,7 +606,7 @@ static BOOL do_copy(char* spath, char* spath_dirname, char* spath_basename, stru
     BOOL no_mkdir = FALSE;
     BOOL run_copy = TRUE;
 
-    if(!copy_override(spath, dpath, dpath_dirname, source_stat, &run_copy, &no_mkdir, log, err_num, override_way)) {
+    if(!override_check(spath, source_stat, dpath, dpath_dirname, &run_copy, &no_mkdir, log, err_num, override_way)) {
         return FALSE;
     }
 
@@ -900,6 +911,8 @@ static BOOL rename_copy(char* source2, struct stat* source_stat, char* dest2, BO
 // if err_num is setted greater than 0, error occured.
 BOOL copy_file(char* source, char* dest, BOOL move, BOOL preserve, enum eCopyOverrideWay* override_way, FILE* log, int* err_num)
 {
+fprintf(log, "copy_file source %s dest %s\n", source, dest);
+
     BOOL raw_mode = mis_raw_mode();
 
     /// have the user pressed C-c ? ///
@@ -1023,8 +1036,137 @@ BOOL copy_file(char* source, char* dest, BOOL move, BOOL preserve, enum eCopyOve
 
 enum eRemoveWriteProtected { kWPNone, kWPYesAll, kWPNoAll, kWPCancel };
 
-BOOL remove_file_core(char* path, BOOL no_ctrl_c, BOOL message, enum eRemoveWriteProtected* remove_write_protected, int* err_num, FILE* log)
+static BOOL remove_regular_file(char* path, BOOL no_ctrl_c, BOOL message, enum eRemoveWriteProtected* remove_write_protected, int* err_num, FILE* log, struct stat* stat_)
 {
+    if(!(stat_->st_mode&S_IWUSR) && !(stat_->st_mode&S_IWGRP) && !(stat_->st_mode&S_IWOTH) ) {
+        if(*remove_write_protected == kWPNoAll) {
+            return TRUE;
+        }
+        else if(*remove_write_protected == kWPYesAll) {
+        }
+        else {
+            const char* str[] = {
+                "No", "Yes", "No(all)", "Yes(all)", "Cancel"
+            };
+            
+            char buf[PATH_MAX+20];
+            snprintf(buf, PATH_MAX+20, "remove write-protected file(%s)", path);
+            int ret = select_str2(buf, (char**)str, 5, 4);
+
+            switch(ret) {
+                case 0:
+                    return TRUE;
+
+                case 1:
+                    break;
+
+                case 2:
+                    *remove_write_protected = kWPNoAll;
+                    return TRUE;
+
+                case 3:
+                    *remove_write_protected = kWPYesAll;
+                    break;
+
+                case 4:
+                    return FALSE;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    /// msg ///
+    if(message) {
+        char buf[PATH_MAX+20];
+        snprintf(buf, PATH_MAX+20, "deleting %s", path);
+        msg_nonstop("%s", buf);
+    }
+
+    /// remove it ///
+    if(unlink(path) < 0) {
+        switch(errno) {
+            case EACCES:
+            case EPERM:
+                fprintf(log, "can't remove. permission denied. (%s)\n", path);
+                (*err_num)++;
+                break;
+
+            case EROFS:
+                fprintf(log, "can't removepermission denied. (%s)\n", path);
+                (*err_num)++;
+                break;
+
+            default:
+                fprintf(log, "unlink err. (%s)\n", path);
+                (*err_num)++;
+                break;
+        }
+    }
+
+    return TRUE;
+}
+
+static BOOL remove_directory_recursively(char* path, BOOL no_ctrl_c, BOOL message, enum eRemoveWriteProtected* remove_write_protected, int* err_num, FILE* log, struct stat* stat_)
+{
+    char buf[PATH_MAX+20];
+    snprintf(buf, PATH_MAX+20, "entering %s", path);
+    msg_nonstop("%s", buf);
+    
+    DIR* dir = opendir(path);
+    if(dir == NULL) {
+        fprintf(log, "can't remove opendir err(%s)\n", path);
+        (*err_num)++;
+        return TRUE;
+    }
+    struct dirent* entry;
+    while((entry = readdir(dir)) != 0) {
+        if(strcmp(entry->d_name, ".") != 0
+            && strcmp(entry->d_name, "..") != 0)
+        {
+            char path2[PATH_MAX];
+            xstrncpy(path2, path, PATH_MAX);
+            xstrncat(path2, "/", PATH_MAX);
+            xstrncat(path2, entry->d_name, PATH_MAX);
+
+            if(!remove_file(path2, no_ctrl_c, FALSE, err_num, log)) {
+                (void)closedir(dir);
+                return FALSE;
+            }
+        }
+    }
+    (void)closedir(dir);
+
+    if(rmdir(path) < 0) {
+        switch(errno) {
+            case EACCES:
+            case EPERM:
+                fprintf(log, "%s --> can't remove. permission denied.", path);
+                (*err_num)++;
+                break;
+
+            case EROFS:
+                fprintf(log, "%s --> can't remove. file system is readonly.", path);
+                (*err_num)++;
+                break;
+
+            default:
+                fprintf(log, "%s --> rmdir err.", path);
+                (*err_num)++;
+                break;
+        }
+    }
+
+    return TRUE;
+}
+
+// path must be allocated with PATH_MAX size
+BOOL remove_file(char* path, BOOL no_ctrl_c, BOOL message, int* err_num, FILE* log)
+{
+fprintf(log, "removing %s\n", path);
+    enum eRemoveWriteProtected remove_write_protected = kWPNone;
+
     /// key input ? ///
     if(!no_ctrl_c) {
         fd_set mask;
@@ -1051,140 +1193,26 @@ BOOL remove_file_core(char* path, BOOL no_ctrl_c, BOOL message, enum eRemoveWrit
     /// cancel ///
     struct stat stat_;
 
-    if(lstat(path, &stat_) < 0) {
-        return TRUE;
-    }
-    else {
+    if(lstat(path, &stat_) == 0) {
         /// file ///
         if(!S_ISDIR(stat_.st_mode)) {
-            if(!(stat_.st_mode&S_IWUSR) && !(stat_.st_mode&S_IWGRP) &&
-                !(stat_.st_mode&S_IWOTH) )
-            {
-                if(*remove_write_protected == kWPNoAll) {
-                    return TRUE;
-                }
-                else if(*remove_write_protected == kWPYesAll) {
-                }
-                else {
-                    const char* str[] = {
-                        "No", "Yes", "No(all)", "Yes(all)", "Cancel"
-                    };
-                    
-                    char buf[PATH_MAX+20];
-                    snprintf(buf, PATH_MAX+20, "remove write-protected file(%s)", path);
-                    int ret = select_str2(buf, (char**)str, 5, 4);
-
-                    switch(ret) {
-                        case 0:
-                            return TRUE;
-
-                        case 1:
-                            break;
-
-                        case 2:
-                            *remove_write_protected = kWPNoAll;
-                            return TRUE;
-
-                        case 3:
-                            *remove_write_protected = kWPYesAll;
-                            break;
-
-                        case 4:
-                            return FALSE;
-
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            /// msg ///
-            if(message) {
-                char buf[PATH_MAX+20];
-                snprintf(buf, PATH_MAX+20, "deleting %s", path);
-                msg_nonstop("%s", buf);
-            }
-
-            /// go ///
-            if(unlink(path) < 0) {
-                switch(errno) {
-                    case EACCES:
-                    case EPERM:
-                        fprintf(log, "can't remove. permission denied. (%s)\n", path);
-                        break;
-
-                    case EROFS:
-                        fprintf(log, "can't removepermission denied. (%s)\n", path);
-                        break;
-
-                    default:
-                        fprintf(log, "unlink err. (%s)\n", path);
-                        break;
-                }
-                return TRUE;
+            if(!remove_regular_file(path, no_ctrl_c, message, &remove_write_protected, err_num, log, &stat_)) {
+                return FALSE;
             }
         }
         /// directory ///
         else {
-            char buf[PATH_MAX+20];
-            snprintf(buf, PATH_MAX+20, "entering %s", path);
-            msg_nonstop("%s", buf);
-            
-            DIR* dir = opendir(path);
-            if(dir == NULL) {
-                fprintf(log, "can't remove opendir err(%s)\n", path);
-                return TRUE;
-            }
-            struct dirent* entry;
-            while((entry = readdir(dir)) != 0) {
-                if(strcmp(entry->d_name, ".") != 0
-                    && strcmp(entry->d_name, "..") != 0)
-                {
-                    char path2[PATH_MAX];
-                    xstrncpy(path2, path, PATH_MAX);
-                    xstrncat(path2, "/", PATH_MAX);
-                    xstrncat(path2, entry->d_name, PATH_MAX);
-
-                    if(!remove_file(path2, no_ctrl_c, FALSE, err_num, log)) {
-                        (void)closedir(dir);
-                        return FALSE;
-                    }
-                }
-            }
-            (void)closedir(dir);
-
-            if(rmdir(path) < 0) {
-                switch(errno) {
-                    case EACCES:
-                    case EPERM:
-                        fprintf(log, "can't remove. permission denied.(%s)", path);
-                        break;
-
-                    case EROFS:
-                        fprintf(log, "can't remove. file system is readonly. (%s)", path);
-                        break;
-
-                    default:
-                        fprintf(log, "rmdir err(%s)", path);
-                        break;
-                }
-
-                return TRUE;
+            if(!remove_directory_recursively(path, no_ctrl_c, message, &remove_write_protected, err_num, log, &stat_)) 
+            {
+                return FALSE;
             }
         }
-
-        return TRUE;
     }
-}
-
-// path must be allocated with PATH_MAX size
-BOOL remove_file(char* path, BOOL no_ctrl_c, BOOL message, int* err_num, FILE* log)
-{
-    enum eRemoveWriteProtected remove_write_protected = kWPNone;
-
-    if(!remove_file_core(path, no_ctrl_c, message, &remove_write_protected, err_num, log)) {
-        return FALSE;
+    else {
+        fprintf(log, "(%s) --> can't stat\n", path);
+        (*err_num)++;
     }
 
     return TRUE;
 }
+
