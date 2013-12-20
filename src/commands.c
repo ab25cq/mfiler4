@@ -2319,6 +2319,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         sDir* dir = filer_dir(adir());
         if(dir) {
             enum eCopyOverrideWay override_way = kNone;
+            enum eRemoveWriteProtected remove_write_protected = kWPNone;
 
             /// ready for the log file ///
             FILE* log;
@@ -2353,7 +2354,7 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         //draw_progress_box(mark_file_num);
                         refresh();
                         
-                        if(!copy_file(source, destination, FALSE, preserve, &override_way, log, &err_num)) {
+                        if(!copy_file(source, destination, FALSE, preserve, &override_way, &remove_write_protected, log, &err_num)) {
                             break;
                         }
 
@@ -2463,8 +2464,9 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         }
 
                         enum eCopyOverrideWay override_way = kNone;
+                        enum eRemoveWriteProtected remove_write_protected = kWPNone;
                         
-                        if(!copy_file(source, destination, FALSE, preserve, &override_way, log, &err_num)) {
+                        if(!copy_file(source, destination, FALSE, preserve, &override_way, &remove_write_protected, log, &err_num)) {
                             err_msg("", runinfo->mSName, runinfo->mSLine);
                             if(!raw_mode) { xendwin(); }
                             fclose(log);
@@ -2516,6 +2518,8 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             gProgressMark = mark_file_num;
 
             enum eCopyOverrideWay override_way;
+            enum eRemoveWriteProtected remove_write_protected = kWPNone;
+
             if(force) {
                 override_way = kYesAll;
             }
@@ -2556,7 +2560,7 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         //draw_progress_box(mark_file_num);
                         refresh();
                         
-                        if(!copy_file(source, destination, TRUE, preserve, &override_way, log, &err_num)) {
+                        if(!copy_file(source, destination, TRUE, preserve, &override_way, &remove_write_protected, log, &err_num)) {
                             break;
                         }
 
@@ -2627,6 +2631,8 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             return FALSE;
         }
 
+        enum eRemoveWriteProtected remove_write_protected = kWPNone;
+
         int j;
         for(j=0; j<mark_file_num; j++) {
             sFile* file = vector_item(markfiles, j);
@@ -2654,7 +2660,7 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
 
                         int err_num;
                         
-                        if(!remove_file(source, FALSE, TRUE, &err_num, log)) {
+                        if(!remove_file(source, FALSE, TRUE, &err_num, log, &remove_write_protected)) {
                             break;
                         }
 
@@ -2727,6 +2733,8 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             gProgressMark = mark_file_num;
 
             enum eCopyOverrideWay override_way;
+            enum eRemoveWriteProtected remove_write_protected = kWPNone;
+
             if(force) {
                 override_way = kYesAll;
             }
@@ -2767,7 +2775,7 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         //draw_progress_box(mark_file_num);
                         refresh();
                         
-                        if(!copy_file(source, destination, TRUE, preserve, &override_way, log, &err_num)) {
+                        if(!copy_file(source, destination, TRUE, preserve, &override_way, &remove_write_protected, log, &err_num)) {
                             break;
                         }
 

@@ -240,9 +240,11 @@ int convert_fname(char* src, char* des, int des_size);
 // file.c
 ///////////////////////////////////////////////////
 enum eCopyOverrideWay { kNone, kYesAll, kNoAll, kCancel, kSelectNewer, kYesAllRemainPermission };
-BOOL copy_file(char* source, char* dest, BOOL move, BOOL preserve, enum eCopyOverrideWay* override_way, FILE* log, int* err_num);
+enum eRemoveWriteProtected { kWPNone, kWPYesAll, kWPNoAll, kWPCancel };
 
-BOOL remove_file(char* path, BOOL no_ctrl_c, BOOL message, int* err_num, FILE* log);
+BOOL copy_file(char* source, char* dest, BOOL move, BOOL preserve, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected, FILE* log, int* err_num);
+
+BOOL remove_file(char* path, BOOL no_ctrl_c, BOOL message, int* err_num, FILE* log, enum eRemoveWriteProtected* remove_write_protected);
 
 extern sObject* gMFiler4;
 extern sObject* gMFiler4System;
