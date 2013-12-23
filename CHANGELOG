@@ -9,6 +9,8 @@
 
     4. ファイルのコピー処理のバグフィックス。
 
+    4. ファイルのバックアップのバグフィックス。
+
 2013 th of Decemver version 1.3.1
 
     1. Fixed bug of Virtual Directory.
@@ -18,6 +20,8 @@
     3. Changed menu with -external working. If user runned the menu item, it reads disk.
 
     4. Fixed bug with coping.
+
+    5. Fixed bug with backup coping.
 
 2013 12月14日 1.3.0
 

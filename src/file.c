@@ -149,9 +149,9 @@ static void copy_timestamp_and_permission(char* dpath, struct stat* source_stat,
     umask(umask_before);
 }
 
-static BOOL do_copy(char* spath, char* spath_dirname, char* spath_basename, struct stat* source_stat, char* dpath, char* dpath_dirname, char* dpath_basename, BOOL move, BOOL preserve, FILE* log, int* err_num, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected);
+static BOOL do_copy(char* spath, struct stat* source_stat, char* dpath, char* dpath_dirname, char* target_directory, BOOL move, BOOL preserve, FILE* log, int* err_num, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected);
 
-static BOOL copy_directory_recursively(char* spath, char* spath_basename, char* dpath, char* dpath_dirname, struct stat* source_stat, BOOL move, BOOL preserve, FILE* log, int* err_num, BOOL no_mkdir, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected)
+static BOOL copy_directory_recursively(char* spath, char* dpath, char* dpath_dirname, char* target_directory, struct stat* source_stat, BOOL move, BOOL preserve, FILE* log, int* err_num, BOOL no_mkdir, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected)
 {
     DIR* dir = opendir(spath);
     if(dir == NULL) {
@@ -180,9 +180,7 @@ static BOOL copy_directory_recursively(char* spath, char* spath_basename, char* 
 
             char dpath2[PATH_MAX];
 
-            xstrncpy(dpath2, dpath_dirname, PATH_MAX);
-            xstrncat(dpath2, "/", PATH_MAX);
-            xstrncat(dpath2, spath_basename, PATH_MAX);
+            xstrncpy(dpath2, target_directory, PATH_MAX);
             xstrncat(dpath2, "/", PATH_MAX);
             xstrncat(dpath2, entry->d_name, PATH_MAX);
 
@@ -192,21 +190,13 @@ static BOOL copy_directory_recursively(char* spath, char* spath_basename, char* 
                 (*err_num)++;
             }
             else {
-                char spath2_dirname[PATH_MAX];
-                xstrncpy(spath2_dirname, spath, PATH_MAX);
-
-                char spath2_basename[PATH_MAX];
-                xstrncpy(spath2_basename, entry->d_name, PATH_MAX);
-
                 char dpath2_dirname[PATH_MAX];
-                xstrncpy(dpath2_dirname, dpath_dirname, PATH_MAX);
-                xstrncat(dpath2_dirname, "/", PATH_MAX);
-                xstrncat(dpath2_dirname, spath_basename, PATH_MAX);
+                xstrncpy(dpath2_dirname, target_directory, PATH_MAX);
 
-                char dpath2_basename[PATH_MAX];
-                xstrncpy(dpath2_basename, entry->d_name, PATH_MAX);
+                char target_directory2[PATH_MAX];
+                xstrncpy(target_directory2, dpath2, PATH_MAX);
 
-                if(!do_copy(spath2, spath2_dirname, spath2_basename, &spath2_stat, dpath2, dpath2_dirname, dpath2_basename, move, preserve, log, err_num, override_way, remove_write_protected)) {
+                if(!do_copy(spath2, &spath2_stat, dpath2, dpath2_dirname, target_directory2, move, preserve, log, err_num, override_way, remove_write_protected)) {
                     closedir(dir);
                     return FALSE;
                 }
@@ -588,7 +578,7 @@ override_select_str:
 // copy spath to dpath with checking override 
 // spath, spath_dirname, spath_basename, dpath, dpath_dirname, dpath_basename are allocated with PATH_MAX size
 // Assuming the file is directory, last character of spath, spath_dirname, spath_basename, dpath, dpath_dirname, dpath_basename is not /.
-static BOOL do_copy(char* spath, char* spath_dirname, char* spath_basename, struct stat* source_stat, char* dpath, char* dpath_dirname, char* dpath_basename, BOOL move, BOOL preserve, FILE* log, int* err_num, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected)
+static BOOL do_copy(char* spath, struct stat* source_stat, char* dpath, char* dpath_dirname, char* target_directory, BOOL move, BOOL preserve, FILE* log, int* err_num, enum eCopyOverrideWay* override_way, enum eRemoveWriteProtected* remove_write_protected)
 {
     BOOL raw_mode = mis_raw_mode();
 
@@ -610,13 +600,13 @@ static BOOL do_copy(char* spath, char* spath_dirname, char* spath_basename, stru
 
             if(move) {
                 if(rename(spath, dpath) < 0) {
-                    if(!copy_directory_recursively(spath, spath_basename, dpath, dpath_dirname, source_stat, move, preserve, log, err_num, no_mkdir, override_way, remove_write_protected)) {
+                    if(!copy_directory_recursively(spath, dpath, dpath_dirname, target_directory, source_stat, move, preserve, log, err_num, no_mkdir, override_way, remove_write_protected)) {
                         return FALSE;
                     }
                 }
             }
             else {
-                if(!copy_directory_recursively(spath, spath_basename, dpath, dpath_dirname, source_stat, move, preserve, log, err_num, no_mkdir, override_way, remove_write_protected)) {
+                if(!copy_directory_recursively(spath, dpath, dpath_dirname, target_directory, source_stat, move, preserve, log, err_num, no_mkdir, override_way, remove_write_protected)) {
                     return FALSE;
                 }
             }
@@ -794,6 +784,13 @@ static BOOL copy_file_into_directory(char* source2, struct stat* source_stat, ch
     xstrncat(dpath, "/", PATH_MAX);
     xstrncat(dpath, dpath_basename, PATH_MAX);
 
+    /// make target directory ///
+    char target_directory[PATH_MAX];
+
+    xstrncpy(target_directory, dpath_dirname, PATH_MAX);
+    xstrncat(target_directory, "/", PATH_MAX);
+    xstrncat(target_directory, spath_basename, PATH_MAX);
+
     /// check invalid copy ///
     if(strcmp(spath, dpath) == 0) {  // source and destination are same
         fprintf(log, "%s --> source and destination are same\n", spath);
@@ -814,7 +811,7 @@ static BOOL copy_file_into_directory(char* source2, struct stat* source_stat, ch
     }
 
     /// do copy! ///
-    if(!do_copy(spath, spath_dirname, spath_basename, source_stat, dpath, dpath_dirname, dpath_basename, move, preserve, log, err_num, override_way, remove_write_protected)) {
+    if(!do_copy(spath, source_stat, dpath, dpath_dirname, target_directory, move, preserve, log, err_num, override_way, remove_write_protected)) {
         return FALSE;
     }
 
@@ -880,8 +877,13 @@ static BOOL rename_copy(char* source2, struct stat* source_stat, char* dest2, BO
         xstrncpy(dpath_basename, p + 1, PATH_MAX);
     }
 
+    /// make target directory ///
+    char target_directory[PATH_MAX];
+
+    xstrncpy(target_directory, dpath, PATH_MAX);
+
     /// do copy ///
-    if(!do_copy(spath, spath_dirname, spath_basename, source_stat, dpath, dpath_dirname, dpath_basename, move, preserve, log, err_num, override_way, remove_write_protected)) {
+    if(!do_copy(spath, source_stat, dpath, dpath_dirname, target_directory, move, preserve, log, err_num, override_way, remove_write_protected)) {
         return FALSE;
     }
 
@@ -945,6 +947,7 @@ BOOL copy_file(char* source, char* dest, BOOL move, BOOL preserve, enum eCopyOve
     /// does the destination file exist? ///
     if(access(dest, F_OK) != 0) {
         int dlen = strlen(dest);
+
 
         /// is this directory name? ///
         if(dest[dlen-1] == '/') {
