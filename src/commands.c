@@ -889,10 +889,6 @@ static void cmdline_start(char* cmdline, int cursor, BOOL quick, BOOL continue_)
     }
 
     if(rcode == 0 || rcode == -2) {
-        //filer_reread(0);
-        //filer_reread(1);
-        //(void)filer_reset_marks(adir());
-
         char buf[256];
         snprintf(buf, 256, "reread -d 0; reread -d 1; mark -a 0");
         int rcode;
@@ -2312,8 +2308,17 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         xstrncpy(destination, runinfo->mArgsRuntime[1], PATH_MAX);
 
         /// go ///
-        sObject* markfiles = filer_mark_files(adir());
+        sObject* markfiles = ALLOC filer_mark_files(adir());
         const int mark_file_num = vector_count(markfiles);
+
+        if(mark_file_num == 0) {
+            merr_msg("there are not mark files");
+
+            xendwin();
+            vector_delete_on_malloc(markfiles);
+            return FALSE;
+        }
+
         gProgressMark = mark_file_num;
 
         sDir* dir = filer_dir(adir());
@@ -2326,7 +2331,8 @@ BOOL cmd_mcp(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             int err_num = 0;
 
             if(!ready_for_logging(&log)) {
-                if(!raw_mode) { xendwin(); }
+                xendwin();
+                vector_delete_on_malloc(markfiles);
                 return FALSE;
             }
 
@@ -2418,9 +2424,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             /// 対象があるかどうかチェック ///
             if(access(destination, F_OK) == 0) {
                 err_msg("destination exists", runinfo->mSName, runinfo->mSLine);
-                if(!raw_mode) {
-                    xendwin();
-                }
+                xendwin();
                 return FALSE;
             }
 
@@ -2441,9 +2445,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         char buf[128];
                         snprintf(buf, 128, "%s doesn't exist", fname);
                         err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                        if(!raw_mode) {
-                            xendwin();
-                        }
+                        xendwin();
                         return FALSE;
                     }
                     else
@@ -2459,7 +2461,7 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         int err_num = 0;
 
                         if(!ready_for_logging(&log)) {
-                            if(!raw_mode) { xendwin(); }
+                            xendwin();
                             return FALSE;
                         }
 
@@ -2468,8 +2470,8 @@ BOOL cmd_mbackup(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                         
                         if(!copy_file(source, destination, FALSE, preserve, &override_way, &remove_write_protected, log, &err_num)) {
                             err_msg("", runinfo->mSName, runinfo->mSLine);
-                            if(!raw_mode) { xendwin(); }
                             fclose(log);
+                            xendwin();
                             return FALSE;
                         }
 
@@ -2513,9 +2515,17 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         sDir* dir = filer_dir(adir());
 
         if(dir) {
-            sObject* markfiles = filer_mark_files(adir());
+            sObject* markfiles = ALLOC filer_mark_files(adir());
             const int mark_file_num = vector_count(markfiles);
             gProgressMark = mark_file_num;
+
+            if(mark_file_num == 0) {
+                merr_msg("there are not mark files");
+
+                xendwin();
+                vector_delete_on_malloc(markfiles);
+                return FALSE;
+            }
 
             enum eCopyOverrideWay override_way;
             enum eRemoveWriteProtected remove_write_protected = kWPNone;
@@ -2532,7 +2542,8 @@ BOOL cmd_mmv(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             int err_num = 0;
 
             if(!ready_for_logging(&log)) {
-                if(!raw_mode) { xendwin(); }
+                xendwin();
+                vector_delete_on_malloc(markfiles);
                 return FALSE;
             }
 
@@ -2607,9 +2618,7 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
     if(!mis_raw_mode()) {
         err_msg("invalid terminal setting. not raw mode", runinfo->mSName, runinfo->mSLine);
 
-        if(!raw_mode) {
-            xendwin();
-        }
+        xendwin();
         return FALSE;
     }
 
@@ -2622,12 +2631,22 @@ BOOL cmd_mrm(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 
     if(runinfo->mArgsNumRuntime == 1) {
         /// go ///
-        sObject* markfiles = filer_mark_files(adir());
+        sObject* markfiles = ALLOC filer_mark_files(adir());
         const int mark_file_num = vector_count(markfiles);
         gProgressMark = mark_file_num;
 
+        if(mark_file_num == 0) {
+            merr_msg("there are not mark files");
+
+            xendwin();
+            vector_delete_on_malloc(markfiles);
+            return FALSE;
+        }
+
         if(log == NULL) {
             merr_msg("can't open the log file");
+            xendwin();
+            vector_delete_on_malloc(markfiles);
             return FALSE;
         }
 
@@ -2728,9 +2747,17 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         sDir* dir = filer_dir(adir());
 
         if(dir) {
-            sObject* markfiles = filer_mark_files(adir());
+            sObject* markfiles = ALLOC filer_mark_files(adir());
             const int mark_file_num = vector_count(markfiles);
             gProgressMark = mark_file_num;
+
+            if(mark_file_num == 0) {
+                merr_msg("there are not mark files");
+
+                xendwin();
+                vector_delete_on_malloc(markfiles);
+                return FALSE;
+            }
 
             enum eCopyOverrideWay override_way;
             enum eRemoveWriteProtected remove_write_protected = kWPNone;
@@ -2747,7 +2774,8 @@ BOOL cmd_mtrashbox(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
             int err_num = 0;
 
             if(!ready_for_logging(&log)) {
-                if(!raw_mode) { xendwin(); }
+                xendwin();
+                vector_delete_on_malloc(markfiles);
                 return FALSE;
             }
 
@@ -2835,9 +2863,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                     char buf[128];
                     snprintf(buf, 128, "mcp: making directory err(%s)", destination);
                     err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                    if(!raw_mode) {
-                        xendwin();
-                    }
+                    xendwin();
                     return FALSE;
                 }
             }
@@ -2845,9 +2871,7 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
                 char buf[128];
                 snprintf(buf, 128, "mcp: destination err(%s)", destination);
                 err_msg(buf, runinfo->mSName, runinfo->mSLine);
-                if(!raw_mode) {
-                    xendwin();
-                }
+                xendwin();
                 return FALSE;
             }
         }
@@ -2856,16 +2880,22 @@ BOOL cmd_mln(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         struct stat dstat;
         if(stat(destination, &dstat) < 0 || !S_ISDIR(dstat.st_mode)) {
             err_msg("mcp: destination is not directory", runinfo->mSName, runinfo->mSLine);
-            if(!raw_mode) {
-                xendwin();
-            }
+            xendwin();
             return FALSE;
         }
 
         /// go ///
-        sObject* markfiles = filer_mark_files(adir());
+        sObject* markfiles = ALLOC filer_mark_files(adir());
         const int mark_file_num = vector_count(markfiles);
         gProgressMark = mark_file_num;
+
+        if(mark_file_num == 0) {
+            merr_msg("there are not mark files");
+
+            xendwin();
+            vector_delete_on_malloc(markfiles);
+            return FALSE;
+        }
 
         sDir* dir = filer_dir(adir());
         if(dir) {
@@ -2975,11 +3005,13 @@ BOOL cmd_mchoice(sObject* nextin, sObject* nextout, sRunInfo* runinfo)
         if(!fd_write(nextout, buf, size)) {
             err_msg("interrupt", runinfo->mSName, runinfo->mSLine);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
+            xendwin();
             return FALSE;
         }
         if(!fd_write(nextout, "\n", 1)) {
             err_msg("interrupt", runinfo->mSName, runinfo->mSLine);
             runinfo->mRCode = RCODE_SIGNAL_INTERRUPT;
+            xendwin();
             return FALSE;
         }
 
