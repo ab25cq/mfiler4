@@ -1,0 +1,7 @@
+*.log
+*.status
+*.o
+config.h
+Makefile
+mattr
+mfiler4
